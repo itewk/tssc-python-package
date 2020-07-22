@@ -38,53 +38,47 @@ to <a href="https://github.com/docker/distribution/issues/1201.">https://github.
 <li>major.minor.patch<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'app_version'</li>
-<li>known implmeneters:<ul>
+<li>known implmeneters:</li>
 <li>maven</li>
-</ul>
-</li>
 </ul>
 </li>
 <li>pre-release<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'pre_release'</li>
-<li>known implmeneters:<ul>
+<li>known implmeneters:</li>
 <li>git</li>
-</ul>
-</li>
 </ul>
 </li>
 <li>build<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'build'</li>
-<li>known implmeneters:<ul>
+<li>known implmeneters:</li>
 <li>git</li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-<p>Example 1</p>
-<p>.. Input:
+<p><strong>Example 1</strong></p>
+<p><em>Input</em>
 - pom.xml: 1.0.0-SNAPSHOT
 - git branch: feature/foo
 - generated version: 1.0.0-feature_foo+GITHASH
 - docker tag: 1.0.0-feature_foo-GITHASH</p>
-<p>.. Step Results:</p>
+<p><em>Step Results</em>::</p>
 <p>{'tssc-results': {
 'generate-metadata': {
 'version': '42.1.0-feature_foo+GITHASH',
 'image-tag': '42.1.0-feature_foo-GITHASH'
 }
 }}</p>
-<p>Example 2</p>
-<p>.. Input:</p>
+<p><strong>Example 2</strong></p>
+<p><em>Input</em></p>
 <ul>
 <li>pom.xml: 1.0.0-SNAPSHOT</li>
 <li>git branch: master</li>
 <li>generated version: 1.0.0+GITHASH</li>
 <li>docker tag: 1.0.0-GITHASH</li>
 </ul>
-<p>.. Step Results:</p>
+<p><em>Step Results</em>::</p>
 <p>{'tssc-results': {
 'generate-metadata': {
 'version': '42.1.0+GITHASH',
@@ -112,30 +106,30 @@ to https://github.com/docker/distribution/issues/1201.
 Source for version sections:
 
   - major.minor.patch
-      - will come from previous sub step of generate_metadata step,
-        with step results including &#39;app_version&#39;
-      - known implmeneters:
-          - maven
+    * will come from previous sub step of generate_metadata step,
+      with step results including &#39;app_version&#39;
+    * known implmeneters:
+      -  maven
   - pre-release
-      - will come from previous sub step of generate_metadata step,
-        with step results including &#39;pre_release&#39;
-      - known implmeneters:
-          - git
+    * will come from previous sub step of generate_metadata step,
+      with step results including &#39;pre_release&#39;
+    * known implmeneters:
+      - git
   - build
-      - will come from previous sub step of generate_metadata step,
-        with step results including &#39;build&#39;
-      - known implmeneters:
-          - git
+    * will come from previous sub step of generate_metadata step,
+      with step results including &#39;build&#39;
+    * known implmeneters:
+      - git
 
-Example 1
+**Example 1**
 
-.. Input:
+*Input*
   - pom.xml: 1.0.0-SNAPSHOT
   - git branch: feature/foo
   - generated version: 1.0.0-feature_foo+GITHASH
   - docker tag: 1.0.0-feature_foo-GITHASH
 
-.. Step Results:
+*Step Results*::
 
   {&#39;tssc-results&#39;: {
     &#39;generate-metadata&#39;: {
@@ -144,16 +138,16 @@ Example 1
     }
   }}
 
-Example 2
+**Example 2**
 
-.. Input:
+*Input*
 
  - pom.xml: 1.0.0-SNAPSHOT
  - git branch: master
  - generated version: 1.0.0+GITHASH
  - docker tag: 1.0.0-GITHASH
 
-.. Step Results:
+*Step Results*::
 
   {&#39;tssc-results&#39;: {
     &#39;generate-metadata&#39;: {
