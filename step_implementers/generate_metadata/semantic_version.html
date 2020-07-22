@@ -58,34 +58,44 @@ with step results including 'build'</li>
 </li>
 </ul>
 <p><strong>Example 1</strong></p>
-<p><em>Input</em></p>
-<ul>
-<li>pom.xml: 1.0.0-SNAPSHOT</li>
-<li>git branch: feature/foo</li>
-<li>generated version: 1.0.0-feature_foo+GITHASH</li>
-<li>docker tag: 1.0.0-feature_foo-GITHASH</li>
-</ul>
+<p><em>Previus Step Results</em></p>
+<pre><code>{'tssc-results': {
+  'generate-metadata': {
+    'app-version': '1.0.0',
+    'pre-release': 'feature_test0',
+    'build': 'abc123'
+  }
+}
+</code></pre>
 <p><em>Step Results</em></p>
 <pre><code>{'tssc-results': {
   'generate-metadata': {
-    'version': '42.1.0-feature_foo+GITHASH',
-    'image-tag': '42.1.0-feature_foo-GITHASH'
+    'app-version': '42.1.0',
+    'pre-release': 'feature_test0',
+    'build': 'abc123',
+    'version': '42.1.0-feature_foo+abc123',
+    'image-tag': '42.1.0-feature_foo-abc123'
   }
 }}
 </code></pre>
 <p><strong>Example 2</strong></p>
-<p><em>Input</em></p>
-<ul>
-<li>pom.xml: 1.0.0-SNAPSHOT</li>
-<li>git branch: master</li>
-<li>generated version: 1.0.0+GITHASH</li>
-<li>docker tag: 1.0.0-GITHASH</li>
-</ul>
+<p><em>Previus Step Results</em></p>
+<pre><code>{'tssc-results': {
+  'generate-metadata': {
+    'app-version': '42.1.0',
+    'pre-release': 'master',
+    'build': 'abc123'
+  }
+}
+</code></pre>
 <p><em>Step Results</em></p>
 <pre><code>{'tssc-results': {
   'generate-metadata': {
-    'version': '42.1.0+GITHASH',
-    'image-tag': '42.1.0-GITHASH',
+    'app-version': '42.1.0',
+    'pre-release': 'master',
+    'build': 'abc123',
+    'version': '42.1.0+abc123',
+    'image-tag': '42.1.0-abc123'
   }
 }}
 </code></pre>
@@ -127,37 +137,49 @@ Source for version sections:
 
 **Example 1**
 
-*Input*
+*Previus Step Results*
 
-  - pom.xml: 1.0.0-SNAPSHOT
-  - git branch: feature/foo
-  - generated version: 1.0.0-feature_foo+GITHASH
-  - docker tag: 1.0.0-feature_foo-GITHASH
+    {&#39;tssc-results&#39;: {
+      &#39;generate-metadata&#39;: {
+        &#39;app-version&#39;: &#39;1.0.0&#39;,
+        &#39;pre-release&#39;: &#39;feature_test0&#39;,
+        &#39;build&#39;: &#39;abc123&#39;
+      }
+    }
 
 *Step Results*
 
     {&#39;tssc-results&#39;: {
       &#39;generate-metadata&#39;: {
-        &#39;version&#39;: &#39;42.1.0-feature_foo+GITHASH&#39;,
-        &#39;image-tag&#39;: &#39;42.1.0-feature_foo-GITHASH&#39;
+        &#39;app-version&#39;: &#39;42.1.0&#39;,
+        &#39;pre-release&#39;: &#39;feature_test0&#39;,
+        &#39;build&#39;: &#39;abc123&#39;,
+        &#39;version&#39;: &#39;42.1.0-feature_foo+abc123&#39;,
+        &#39;image-tag&#39;: &#39;42.1.0-feature_foo-abc123&#39;
       }
     }}
 
 **Example 2**
 
-*Input*
+*Previus Step Results*
 
- - pom.xml: 1.0.0-SNAPSHOT
- - git branch: master
- - generated version: 1.0.0+GITHASH
- - docker tag: 1.0.0-GITHASH
+    {&#39;tssc-results&#39;: {
+      &#39;generate-metadata&#39;: {
+        &#39;app-version&#39;: &#39;42.1.0&#39;,
+        &#39;pre-release&#39;: &#39;master&#39;,
+        &#39;build&#39;: &#39;abc123&#39;
+      }
+    }
 
 *Step Results*
 
     {&#39;tssc-results&#39;: {
       &#39;generate-metadata&#39;: {
-        &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
-        &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
+        &#39;app-version&#39;: &#39;42.1.0&#39;,
+        &#39;pre-release&#39;: &#39;master&#39;,
+        &#39;build&#39;: &#39;abc123&#39;,
+        &#39;version&#39;: &#39;42.1.0+abc123&#39;,
+        &#39;image-tag&#39;: &#39;42.1.0-abc123&#39;
       }
     }}
 &#34;&#34;&#34;
