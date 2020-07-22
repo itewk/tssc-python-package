@@ -58,18 +58,21 @@ with step results including 'build'</li>
 </li>
 </ul>
 <p><strong>Example 1</strong></p>
-<p><em>Input</em>
-- pom.xml: 1.0.0-SNAPSHOT
-- git branch: feature/foo
-- generated version: 1.0.0-feature_foo+GITHASH
-- docker tag: 1.0.0-feature_foo-GITHASH</p>
+<p><em>Input</em></p>
+<ul>
+<li>pom.xml: 1.0.0-SNAPSHOT</li>
+<li>git branch: feature/foo</li>
+<li>generated version: 1.0.0-feature_foo+GITHASH</li>
+<li>docker tag: 1.0.0-feature_foo-GITHASH</li>
+</ul>
 <p><em>Step Results</em>::</p>
-<p>{'tssc-results': {
-'generate-metadata': {
-'version': '42.1.0-feature_foo+GITHASH',
-'image-tag': '42.1.0-feature_foo-GITHASH'
-}
-}}</p>
+<pre><code>{'tssc-results': {
+  'generate-metadata': {
+    'version': '42.1.0-feature_foo+GITHASH',
+    'image-tag': '42.1.0-feature_foo-GITHASH'
+  }
+}}
+</code></pre>
 <p><strong>Example 2</strong></p>
 <p><em>Input</em></p>
 <ul>
@@ -79,12 +82,13 @@ with step results including 'build'</li>
 <li>docker tag: 1.0.0-GITHASH</li>
 </ul>
 <p><em>Step Results</em>::</p>
-<p>{'tssc-results': {
-'generate-metadata': {
-'version': '42.1.0+GITHASH',
-'image-tag': '42.1.0-GITHASH',
-}
-}}</p>
+<pre><code>{'tssc-results': {
+  'generate-metadata': {
+    'version': '42.1.0+GITHASH',
+    'image-tag': '42.1.0-GITHASH',
+  }
+}}
+</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -124,6 +128,7 @@ Source for version sections:
 **Example 1**
 
 *Input*
+
   - pom.xml: 1.0.0-SNAPSHOT
   - git branch: feature/foo
   - generated version: 1.0.0-feature_foo+GITHASH
@@ -131,12 +136,12 @@ Source for version sections:
 
 *Step Results*::
 
-  {&#39;tssc-results&#39;: {
-    &#39;generate-metadata&#39;: {
-      &#39;version&#39;: &#39;42.1.0-feature_foo+GITHASH&#39;,
-      &#39;image-tag&#39;: &#39;42.1.0-feature_foo-GITHASH&#39;
-    }
-  }}
+    {&#39;tssc-results&#39;: {
+      &#39;generate-metadata&#39;: {
+        &#39;version&#39;: &#39;42.1.0-feature_foo+GITHASH&#39;,
+        &#39;image-tag&#39;: &#39;42.1.0-feature_foo-GITHASH&#39;
+      }
+    }}
 
 **Example 2**
 
@@ -149,12 +154,12 @@ Source for version sections:
 
 *Step Results*::
 
-  {&#39;tssc-results&#39;: {
-    &#39;generate-metadata&#39;: {
-      &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
-      &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
-    }
-  }}
+    {&#39;tssc-results&#39;: {
+      &#39;generate-metadata&#39;: {
+        &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
+        &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
+      }
+    }}
 &#34;&#34;&#34;
 
 from tssc import TSSCFactory
