@@ -38,22 +38,28 @@ to <a href="https://github.com/docker/distribution/issues/1201.">https://github.
 <li>major.minor.patch<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'app_version'</li>
-<li>implmeneters</li>
+<li>known implmeneters:<ul>
 <li>maven</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>pre-release<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'pre_release'</li>
-<li>implmeneters</li>
+<li>known implmeneters:<ul>
 <li>git</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>build<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'build'</li>
-<li>implmeneters</li>
+<li>known implmeneters:<ul>
 <li>git</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -85,6 +91,18 @@ with step results including 'build'</li>
 }
 }}</li>
 </ul>
+<p>TEST</p>
+<div class="admonition hightlight">
+<p class="admonition-title">Hightlight:&ensp;json</p>
+</div>
+<p>.. code-block:: json
+{'tssc-results': {
+'generate-metadata': {
+'version': '42.1.0+GITHASH',
+'image-tag': '42.1.0-GITHASH',
+}
+}}
+&hellip;</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -106,20 +124,20 @@ to https://github.com/docker/distribution/issues/1201.
 Source for version sections:
 
   - major.minor.patch
-    - will come from previous sub step of generate_metadata step,
-      with step results including &#39;app_version&#39;
-    - implmeneters
-      - maven
+      - will come from previous sub step of generate_metadata step,
+        with step results including &#39;app_version&#39;
+      - known implmeneters:
+          - maven
   - pre-release
-    - will come from previous sub step of generate_metadata step,
-      with step results including &#39;pre_release&#39;
-    - implmeneters
-      - git
+      - will come from previous sub step of generate_metadata step,
+        with step results including &#39;pre_release&#39;
+      - known implmeneters:
+          - git
   - build
-    - will come from previous sub step of generate_metadata step,
-      with step results including &#39;build&#39;
-    - implmeneters
-      - git
+      - will come from previous sub step of generate_metadata step,
+        with step results including &#39;build&#39;
+      - known implmeneters:
+          - git
 
 Example 1
 
@@ -148,6 +166,20 @@ Example 2
          &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
         }
      }}
+
+
+TEST
+
+.. hightlight:: json
+.. code-block:: json
+    {&#39;tssc-results&#39;: {
+      &#39;generate-metadata&#39;: {
+        &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
+        &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
+       }
+    }}
+    ...
+  
 &#34;&#34;&#34;
 
 from tssc import TSSCFactory
