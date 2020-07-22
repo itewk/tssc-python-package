@@ -64,45 +64,33 @@ with step results including 'build'</li>
 </li>
 </ul>
 <p>Example 1</p>
-<ul>
-<li>pom.xml: 1.0.0-SNAPSHOT</li>
-<li>git branch: feature/foo</li>
-<li>generated version: 1.0.0-feature_foo+GITHASH</li>
-<li>docker tag: 1.0.0-feature_foo-GITHASH</li>
-<li>step results:
-{'tssc-results': {
+<p>.. Input:
+- pom.xml: 1.0.0-SNAPSHOT
+- git branch: feature/foo
+- generated version: 1.0.0-feature_foo+GITHASH
+- docker tag: 1.0.0-feature_foo-GITHASH</p>
+<p>.. Step Results:</p>
+<p>{'tssc-results': {
 'generate-metadata': {
 'version': '42.1.0-feature_foo+GITHASH',
 'image-tag': '42.1.0-feature_foo-GITHASH'
 }
-}}</li>
-</ul>
+}}</p>
 <p>Example 2</p>
+<p>.. Input:</p>
 <ul>
 <li>pom.xml: 1.0.0-SNAPSHOT</li>
 <li>git branch: master</li>
 <li>generated version: 1.0.0+GITHASH</li>
 <li>docker tag: 1.0.0-GITHASH</li>
-<li>step results:
-{'tssc-results': {
-'generate-metadata': {
-'version': '42.1.0+GITHASH',
-'image-tag': '42.1.0-GITHASH',
-}
-}}</li>
 </ul>
-<p>TEST</p>
-<div class="admonition hightlight">
-<p class="admonition-title">Hightlight:&ensp;json</p>
-</div>
-<p>.. code-block:: json
-{'tssc-results': {
+<p>.. Step Results:</p>
+<p>{'tssc-results': {
 'generate-metadata': {
 'version': '42.1.0+GITHASH',
 'image-tag': '42.1.0-GITHASH',
 }
-}}
-&hellip;</p>
+}}</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -141,45 +129,38 @@ Source for version sections:
 
 Example 1
 
+.. Input:
   - pom.xml: 1.0.0-SNAPSHOT
   - git branch: feature/foo
   - generated version: 1.0.0-feature_foo+GITHASH
   - docker tag: 1.0.0-feature_foo-GITHASH
-  - step results:
-      {&#39;tssc-results&#39;: {
-        &#39;generate-metadata&#39;: {
-          &#39;version&#39;: &#39;42.1.0-feature_foo+GITHASH&#39;,
-          &#39;image-tag&#39;: &#39;42.1.0-feature_foo-GITHASH&#39;
-          }
-      }}
+
+.. Step Results:
+
+  {&#39;tssc-results&#39;: {
+    &#39;generate-metadata&#39;: {
+      &#39;version&#39;: &#39;42.1.0-feature_foo+GITHASH&#39;,
+      &#39;image-tag&#39;: &#39;42.1.0-feature_foo-GITHASH&#39;
+    }
+  }}
 
 Example 2
+
+.. Input:
 
  - pom.xml: 1.0.0-SNAPSHOT
  - git branch: master
  - generated version: 1.0.0+GITHASH
  - docker tag: 1.0.0-GITHASH
- - step results:
-     {&#39;tssc-results&#39;: {
-       &#39;generate-metadata&#39;: {
-         &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
-         &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
-        }
-     }}
 
+.. Step Results:
 
-TEST
-
-.. hightlight:: json
-.. code-block:: json
-    {&#39;tssc-results&#39;: {
-      &#39;generate-metadata&#39;: {
-        &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
-        &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
-       }
-    }}
-    ...
-  
+  {&#39;tssc-results&#39;: {
+    &#39;generate-metadata&#39;: {
+      &#39;version&#39;: &#39;42.1.0+GITHASH&#39;,
+      &#39;image-tag&#39;: &#39;42.1.0-GITHASH&#39;,
+    }
+  }}
 &#34;&#34;&#34;
 
 from tssc import TSSCFactory
