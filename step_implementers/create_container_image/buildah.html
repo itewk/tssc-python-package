@@ -38,6 +38,25 @@
 }
 </code></pre>
 <h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
+<p>TODO</p>
+<h2 id="results">Results</h2>
+<p><strong> Example 1 </strong></p>
+<p><code>image_tar_file</code> step configuration not specified.</p>
+<pre><code>'tssc-results': {
+    'create-container-image': {
+        'image_tag': '',
+    }
+}
+</code></pre>
+<p><strong> Example 2 </strong></p>
+<p><code>image_tar_file</code> step configuration specified.</p>
+<pre><code>'tssc-results': {
+    'create-container-image': {
+        'image_tag': '',
+        'image_tar_file' : ''
+    }
+}
+</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -62,6 +81,32 @@ Step Config
 
 Expected Previous Step Results
 ------------------------------
+
+TODO
+
+Results
+-------
+
+** Example 1 **
+
+`image_tar_file` step configuration not specified.
+
+    &#39;tssc-results&#39;: {
+        &#39;create-container-image&#39;: {
+            &#39;image_tag&#39;: &#39;&#39;,
+        }
+    }
+
+** Example 2 **
+
+`image_tar_file` step configuration specified.
+
+    &#39;tssc-results&#39;: {
+        &#39;create-container-image&#39;: {
+            &#39;image_tag&#39;: &#39;&#39;,
+            &#39;image_tar_file&#39; : &#39;&#39;
+        }
+    }
 
 &#34;&#34;&#34;
 import os
@@ -320,6 +365,7 @@ If tag is not specified (not defaulted)</dd>
 <ul>
 <li><a href="#step-config">Step Config</a></li>
 <li><a href="#expected-previous-step-results">Expected Previous Step Results</a></li>
+<li><a href="#results">Results</a></li>
 </ul>
 </div>
 <ul id="index">
