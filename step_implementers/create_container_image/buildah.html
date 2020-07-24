@@ -32,6 +32,7 @@ from runtime configuration.</p>
 <tr>
 <th>Configuration Key</th>
 <th>Required?</th>
+<th>Default</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -39,26 +40,29 @@ from runtime configuration.</p>
 <tr>
 <td><code>imagespecfile</code></td>
 <td>True</td>
+<td><code>'Dockerfile'</code></td>
 <td>TODO</td>
 </tr>
 <tr>
 <td><code>context</code></td>
 <td>True</td>
+<td><code>'.'</code></td>
 <td>TODO</td>
 </tr>
 <tr>
 <td><code>tlsverify</code></td>
 <td>True</td>
+<td><code>'true'</code></td>
 <td>TODO</td>
 </tr>
 <tr>
 <td><code>format</code></td>
 <td>True</td>
+<td><code>'oci'</code></td>
 <td>TODO</td>
 </tr>
 </tbody>
 </table>
-<p>TODO</p>
 <h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
 <p>Results expected from previous steps that this step requires.</p>
 <table>
@@ -119,14 +123,12 @@ Step configuration expected as input to this step.
 Could come from either configuration file or
 from runtime configuration.
 
-| Configuration Key | Required? |Description
-|-------------------|-----------|-----------
-| `imagespecfile`   | True      | TODO
-| `context`         | True      | TODO
-| `tlsverify`       | True      | TODO
-| `format`          | True      | TODO
-
-TODO
+| Configuration Key | Required? | Default        | Description
+|-------------------|-----------|----------------|-----------
+| `imagespecfile`   | True      | `&#39;Dockerfile&#39;` | TODO
+| `context`         | True      | `&#39;.&#39;`          | TODO
+| `tlsverify`       | True      | `&#39;true&#39;`       | TODO
+| `format`          | True      | `&#39;oci&#39;`        | TODO
 
 Expected Previous Step Results
 ------------------------------
