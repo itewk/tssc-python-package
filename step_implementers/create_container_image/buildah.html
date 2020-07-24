@@ -24,32 +24,85 @@
 <section id="section-intro">
 <p>Step Implementer for the create-container-image step for Buildah.</p>
 <h2 id="step-configuration">Step Configuration</h2>
-<p><strong> Example </strong></p>
-<pre><code>'tssc-config': {
-    'create-container-image': {
-        'implementer': 'Buildah',
-        'config': {
-            'imagespecfile': 'Dockerfile',
-            'context': ''
-            'tlsverify' : 'true',
-            'format' : 'oci',
-            'image_tar_file': ''
-        }
-    }
-}
-</code></pre>
-<h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
+<p>Step configuration expected as input to this step.
+Could come from either configuration file or
+from runtime configuration.</p>
+<table>
+<thead>
+<tr>
+<th>Configuration Key</th>
+<th>Required?</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>imagespecfile</code></td>
+<td>True</td>
+<td>TODO</td>
+</tr>
+<tr>
+<td><code>context</code></td>
+<td>True</td>
+<td>TODO</td>
+</tr>
+<tr>
+<td><code>tlsverify</code></td>
+<td>True</td>
+<td>TODO</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td>True</td>
+<td>TODO</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td>True</td>
+<td>TODO</td>
+</tr>
+</tbody>
+</table>
 <p>TODO</p>
+<h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
+<p>Results expected from previous steps that this step requires.</p>
+<table>
+<thead>
+<tr>
+<th>Step Name</th>
+<th>Result Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TODO</code></td>
+<td><code>TODO</code></td>
+<td>TODO</td>
+</tr>
+</tbody>
+</table>
 <h2 id="results">Results</h2>
-<p><strong> Example 1 </strong></p>
-<p><code>image_tar_file</code> step configuration not specified.</p>
-<pre><code>'tssc-results': {
-    'create-container-image': {
-        'image_tag': '',
-    }
-}
-</code></pre>
-<p><strong> Example 2 </strong></p>
+<p>Results output by this step.</p>
+<table>
+<thead>
+<tr>
+<th>Result Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image_tag</code></td>
+<td>TODO</td>
+</tr>
+<tr>
+<td><code>image_tar_file</code></td>
+<td>TODO</td>
+</tr>
+</tbody>
+</table>
+<p><strong> Example </strong></p>
 <p><code>image_tar_file</code> step configuration specified.</p>
 <pre><code>'tssc-results': {
     'create-container-image': {
@@ -67,40 +120,41 @@
 Step Configuration
 ------------------
 
-** Example **
+Step configuration expected as input to this step.
+Could come from either configuration file or
+from runtime configuration.
 
-    &#39;tssc-config&#39;: {
-        &#39;create-container-image&#39;: {
-            &#39;implementer&#39;: &#39;Buildah&#39;,
-            &#39;config&#39;: {
-                &#39;imagespecfile&#39;: &#39;Dockerfile&#39;,
-                &#39;context&#39;: &#39;&#39;
-                &#39;tlsverify&#39; : &#39;true&#39;,
-                &#39;format&#39; : &#39;oci&#39;,
-                &#39;image_tar_file&#39;: &#39;&#39;
-            }
-        }
-    }
+| Configuration Key | Required? |Description
+|-------------------|-----------|-----------
+| `imagespecfile`   | True      | TODO
+| `context`         | True      | TODO
+| `tlsverify`       | True      | TODO
+| `format`          | True      | TODO
+| `format`          | True      | TODO
+
+TODO
 
 Expected Previous Step Results
 ------------------------------
 
-TODO
+Results expected from previous steps that this step requires.
+
+| Step Name | Result Key | Description
+|-----------|------------|------------
+| `TODO`    | `TODO`     | TODO
 
 Results
 -------
 
-** Example 1 **
+Results output by this step.
 
-`image_tar_file` step configuration not specified.
+| Result Key       | Description
+|------------------|------------
+| `image_tag`      | TODO
+| `image_tar_file` | TODO
 
-    &#39;tssc-results&#39;: {
-        &#39;create-container-image&#39;: {
-            &#39;image_tag&#39;: &#39;&#39;,
-        }
-    }
 
-** Example 2 **
+** Example **
 
 `image_tar_file` step configuration specified.
 
@@ -123,7 +177,7 @@ DEFAULT_ARGS = {
     # Image specification file name
     &#39;imagespecfile&#39;: &#39;Dockerfile&#39;,
 
-    # Path to the image specification file
+    # Parent path to the image specification file
     &#39;context&#39;: &#39;.&#39;,
 
     # Verify TLS Certs?
