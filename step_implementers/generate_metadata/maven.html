@@ -38,10 +38,10 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
+<td><code>pom-file</code></td>
 <td>True</td>
-<td></td>
-<td></td>
+<td><code>'pom.xml'</code></td>
+<td>pom file to read the app version out of</td>
 </tr>
 </tbody>
 </table>
@@ -74,7 +74,7 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
+<td><code>app-version</code></td>
 <td>TODO</td>
 </tr>
 </tbody>
@@ -99,9 +99,9 @@ Step configuration expected as input to this step.
 Could come from either configuration file or
 from runtime configuration.
 
-| Configuration Key | Required? | Default | Description
-|-------------------|-----------|---------|-----------
-| `TODO`            | True      |         |
+| Configuration Key | Required? | Default     | Description
+|-------------------|-----------|-------------|-----------
+| `pom-file`        | True      | `&#39;pom.xml&#39;` | pom file to read the app version out of
 
 Expected Previous Step Results
 ------------------------------
@@ -117,9 +117,9 @@ Results
 
 Results output by this step.
 
-| Result Key | Description
-|------------|------------
-| `TODO`     | TODO
+| Result Key    | Description
+|---------------|------------
+| `app-version` | TODO
 
 
 **Example**
