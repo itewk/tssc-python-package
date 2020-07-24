@@ -38,25 +38,35 @@ to <a href="https://github.com/docker/distribution/issues/1201.">https://github.
 <li>major.minor.patch<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'app_version'</li>
-<li>known implmeneters:</li>
+<li>known implementers:</li>
 <li>maven</li>
 </ul>
 </li>
 <li>pre-release<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'pre_release'</li>
-<li>known implmeneters:</li>
+<li>known implementers:</li>
 <li>git</li>
 </ul>
 </li>
 <li>build<ul>
 <li>will come from previous sub step of generate_metadata step,
 with step results including 'build'</li>
-<li>known implmeneters:</li>
+<li>known implementers:</li>
 <li>git</li>
 </ul>
 </li>
 </ul>
+<h2 id="input">Input</h2>
+<p>Step Configuration
+``````````````````</p>
+<p>TODO</p>
+<p>Expected Previous Step Results
+``````````````````````````````</p>
+<p>TODO</p>
+<h2 id="results">Results</h2>
+<p>TODO</p>
+<h2 id="examples">Examples</h2>
 <p><strong>Example 1</strong></p>
 <p><em>Previous Step Results</em></p>
 <pre><code>{'tssc-results': {
@@ -122,18 +132,39 @@ Source for version sections:
   - major.minor.patch
     * will come from previous sub step of generate_metadata step,
       with step results including &#39;app_version&#39;
-    * known implmeneters:
+    * known implementers:
       -  maven
   - pre-release
     * will come from previous sub step of generate_metadata step,
       with step results including &#39;pre_release&#39;
-    * known implmeneters:
+    * known implementers:
       - git
   - build
     * will come from previous sub step of generate_metadata step,
       with step results including &#39;build&#39;
-    * known implmeneters:
+    * known implementers:
       - git
+
+Input
+-----
+
+Step Configuration
+``````````````````
+
+TODO
+
+Expected Previous Step Results
+``````````````````````````````
+
+TODO
+
+Results
+-------
+
+TODO
+      
+Examples
+--------
 
 **Example 1**
 
@@ -400,6 +431,9 @@ TSSCFactory.register_step_implementer(SemanticVersion)</code></pre>
 <div class="toc">
 <ul>
 <li><a href="#notes">Notes</a></li>
+<li><a href="#input">Input</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#examples">Examples</a></li>
 </ul>
 </div>
 <ul id="index">
