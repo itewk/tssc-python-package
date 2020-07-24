@@ -91,9 +91,24 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>generate-metadata</code></td>
+<td><code>app-version</code></td>
+<td>Value to use for <code>version</code> portion of semantic version
+(<a href="https://semver.org/">https://semver.org/</a>).</td>
+</tr>
+<tr>
+<td><code>generate-metadata</code></td>
+<td><code>pre-release</code></td>
+<td>Value to use for <code>pre-release</code> portion of semantic version
+(<a href="https://semver.org/">https://semver.org/</a>).
+Uses the Git branch name.</td>
+</tr>
+<tr>
+<td><code>generate-metadata</code></td>
+<td><code>build</code></td>
+<td>Value to use for <code>build</code> portion of semantic version
+(<a href="https://semver.org/">https://semver.org/</a>).
+Uses a portion of the latest Git commit hash.</td>
 </tr>
 </tbody>
 </table>
@@ -108,18 +123,16 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>version</code></td>
+<td>Constructed semantic version (<a href="https://semver.org/">https://semver.org/</a>).</td>
+</tr>
+<tr>
+<td><code>image-tag</code></td>
+<td>Constructed semantic version (<a href="https://semver.org/">https://semver.org/</a>) modified
+to work as a container image tag.</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Example</strong></p>
-<pre><code>'tssc-results': {
-    'TODO': {
-        'TODO': ''
-    }
-}
-</code></pre>
 <h2 id="examples">Examples</h2>
 <p><strong>Example 1</strong></p>
 <p><em>Previous Step Results</em></p>
@@ -215,27 +228,27 @@ Expected Previous Step Results
 
 Results expected from previous steps that this step requires.
 
-| Step Name | Result Key | Description
-|-----------|------------|------------
-| `TODO`    | `TODO`     | TODO
+| Step Name           | Result Key    | Description
+|---------------------|---------------|------------
+| `generate-metadata` | `app-version` | Value to use for `version` portion of semantic version \
+                                        (https://semver.org/).
+| `generate-metadata` | `pre-release` | Value to use for `pre-release` portion of semantic version \
+                                        (https://semver.org/). \
+                                        Uses the Git branch name.
+| `generate-metadata` | `build`       | Value to use for `build` portion of semantic version \
+                                        (https://semver.org/). \
+                                        Uses a portion of the latest Git commit hash.
 
 Results
 -------
 
 Results output by this step.
 
-| Result Key | Description
-|------------|------------
-| `TODO`     | TODO
-
-
-**Example**
-
-    &#39;tssc-results&#39;: {
-        &#39;TODO&#39;: {
-            &#39;TODO&#39;: &#39;&#39;
-        }
-    }
+| Result Key  | Description
+|-------------|------------
+| `version`   | Constructed semantic version (https://semver.org/).
+| `image-tag` | Constructed semantic version (https://semver.org/) modified \
+                to work as a container image tag.
 
 Examples
 --------

@@ -40,8 +40,8 @@ accept minimally the following configuration options.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="results">Results</h2>
-<p>All tssc.StepImplementers for this step should
+<h2 id="step-results">Step Results</h2>
+<p>The combination of tssc.StepImplementers for this step should
 minimally produce the following step results.</p>
 <table>
 <thead>
@@ -52,8 +52,13 @@ minimally produce the following step results.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>version</code></td>
+<td>Constructed semantic version (<a href="https://semver.org/">https://semver.org/</a>).</td>
+</tr>
+<tr>
+<td><code>image-tag</code></td>
+<td>Constructed semantic version (<a href="https://semver.org/">https://semver.org/</a>) modified
+to work as a container image tag.</td>
 </tr>
 </tbody>
 </table>
@@ -72,14 +77,16 @@ accept minimally the following configuration options.
 |-----------------|------------
 | `TODO`          | TODO
 
-Results
--------
-All tssc.StepImplementers for this step should
+Step Results
+------------
+The combination of tssc.StepImplementers for this step should
 minimally produce the following step results.
 
-| Result Key       | Description
-|------------------|------------
-| `TODO`           | TODO
+| Result Key  | Description
+|-------------|------------
+| `version`   | Constructed semantic version (https://semver.org/).
+| `image-tag` | Constructed semantic version (https://semver.org/) modified \
+                to work as a container image tag.
 &#34;&#34;&#34;
 
 from .maven import Maven
@@ -123,7 +130,7 @@ semantic version from other metadata …</p></div>
 <div class="toc">
 <ul>
 <li><a href="#step-configuration">Step Configuration</a></li>
-<li><a href="#results">Results</a></li>
+<li><a href="#step-results">Step Results</a></li>
 </ul>
 </div>
 <ul id="index">

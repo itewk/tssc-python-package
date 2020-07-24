@@ -41,19 +41,15 @@ from runtime configuration.</p>
 <td><code>repo-root</code></td>
 <td>True</td>
 <td><code>./</code></td>
-<td>Directory path to the Git repo to generate metadata from.</td>
+<td>Directory path to the Git repo to generate
+metadata from.</td>
 </tr>
 <tr>
 <td><code>build-string-length</code></td>
 <td>True</td>
 <td><code>7</code></td>
-<td>Length of the Git hash to use for the<br></td>
-</tr>
-<tr>
-<td><code>build</code> portion of the semantic version.</td>
-<td></td>
-<td></td>
-<td></td>
+<td>Length of the Git hash to use for the
+<code>build</code> portion of the semantic version.</td>
 </tr>
 </tbody>
 </table>
@@ -74,19 +70,14 @@ from runtime configuration.</p>
 <tbody>
 <tr>
 <td><code>pre-release</code></td>
-<td>Value to use for <code>pre-release</code> portion of semantic version (<a href="https://semver.org/">https://semver.org/</a>).<br></td>
-</tr>
-<tr>
-<td>Uses the Git branch name.</td>
-<td></td>
+<td>Value to use for <code>pre-release</code> portion of semantic version
+(<a href="https://semver.org/">https://semver.org/</a>).
+Uses the Git branch name.</td>
 </tr>
 <tr>
 <td><code>build</code></td>
-<td>Value to use for <code>build</code> portion of semantic version (<a href="https://semver.org/">https://semver.org/</a>)<br></td>
-</tr>
-<tr>
-<td>Uses a portion of the latest Git commit hash.</td>
-<td></td>
+<td>Value to use for <code>build</code> portion of semantic version (<a href="https://semver.org/">https://semver.org/</a>).
+Uses a portion of the latest Git commit hash.</td>
 </tr>
 </tbody>
 </table>
@@ -105,8 +96,9 @@ from runtime configuration.
 
 | Configuration Key     | Required? | Default | Description
 |-----------------------|-----------|---------|-----------
-| `repo-root`           | True      | `./`    | Directory path to the Git repo to generate metadata from.
-| `build-string-length` | True      | `7`     | Length of the Git hash to use for the&lt;br&gt;
+| `repo-root`           | True      | `./`    | Directory path to the Git repo to generate \
+                                                metadata from.
+| `build-string-length` | True      | `7`     | Length of the Git hash to use for the \
                                                 `build` portion of the semantic version.
 
 Expected Previous Step Results
@@ -123,9 +115,10 @@ Results output by this step.
 
 | Result Key    | Description
 |---------------|------------
-| `pre-release` | Value to use for `pre-release` portion of semantic version (https://semver.org/).&lt;br&gt;
+| `pre-release` | Value to use for `pre-release` portion of semantic version \
+                    (https://semver.org/). \
                     Uses the Git branch name.
-| `build`       | Value to use for `build` portion of semantic version (https://semver.org/)&lt;br&gt;
+| `build`       | Value to use for `build` portion of semantic version (https://semver.org/). \
                     Uses a portion of the latest Git commit hash.
 &#34;&#34;&#34;
 
