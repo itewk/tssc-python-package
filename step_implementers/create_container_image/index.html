@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.4" />
 <title>tssc.step_implementers.create_container_image API documentation</title>
-<meta name="description" content="tssc.StepImplementers for the &#39;create_container_image&#39; TSSC step …" />
+<meta name="description" content="tssc.StepImplementers for the &#39;create-container-image&#39; TSSC step …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -22,172 +22,49 @@
 <h1 class="title">Module <code>tssc.step_implementers.create_container_image</code></h1>
 </header>
 <section id="section-intro">
-<p>tssc.StepImplementers for the 'create_container_image' TSSC step.</p>
+<p>tssc.StepImplementers for the 'create-container-image' TSSC step.</p>
 <h2 id="step-configuration">Step Configuration</h2>
-<p>All tssc.StepImplementers for the <code>create_container_image</code> step should
+<p>All tssc.StepImplementers for this step should
 accept minimally the following configuration options.</p>
-<p>TODO</p>
-<p>+------------------------+------------+----------------------------------------+
-| Parameter
-| Required
-| Description
-|
-|
-|
-|
-|
-+========================+============+========================================+
-| TODO
-| column 2
-| TODO
-|
-|
-|
-|
-|
-+------------------------+------------+----------------------------------------+
-| TODO
-| column 2
-| TODO
-|
-|
-|
-|
-|
-+------------------------+------------+----------------------------------------+</p>
-<p>+------------------------+------------+----------+----------+
-| Header row, column 1
-| Header 2
-| Header 3 | Header 4 |
-| (header rows optional) |
-|
-|
-|
-+========================+============+==========+==========+
-| body row 1, column 1
-| column 2
-| column 3 | column 4 |
-+------------------------+------------+----------+----------+
-| body row 2
-| Cells may span columns.
-|
-+------------------------+------------+---------------------+
-| body row 3
-| Cells may
-| - Table cells
-|
-+------------------------+ span rows. | - contain
-|
-| body row 4
-|
-| - body elements.
-|
-+------------------------+------------+----------+----------+
-| body row 5
-| Cells may also be
-|
-|
-|
-| empty: <code>--&gt;</code>
-|
-|
-+------------------------+-----------------------+----------+</p>
-<p>=====
-=====
-======
-Inputs
-Output</p>
-<hr>
-<p>A
-B
-A or B
-=====
-=====
-======
-False
-False
-False
-True
-False
-True
-False
-True
-True
-True
-True
-True
-=====
-=====
-======</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt>todo
-: str, optional</dt>
-<dt>this is a test 1</dt>
-<dt><strong><code>todo2</code></strong> :&ensp;<code>bool</code></dt>
-<dd>this is a test 2</dd>
-</dl>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>imagespecfile</code></td>
+<td>Image specification file name</td>
+</tr>
+<tr>
+<td><code>context</code></td>
+<td>Parent path to the image specification file</td>
+</tr>
+<tr>
+<td><code>tlsverify</code></td>
+<td>Verify TLS certs when pulling images?</td>
+</tr>
+</tbody>
+</table>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;tssc.StepImplementers for the &#39;create_container_image&#39; TSSC step.
+<pre><code class="python">&#34;&#34;&#34;tssc.StepImplementers for the &#39;create-container-image&#39; TSSC step.
 
 Step Configuration
 ------------------
-All tssc.StepImplementers for the `create_container_image` step should
+All tssc.StepImplementers for this step should
 accept minimally the following configuration options.
 
-TODO
+| Parameter       | Description
+|-----------------|------------
+| `imagespecfile` | Image specification file name
+| `context`       | Parent path to the image specification file
+| `tlsverify`     | Verify TLS certs when pulling images?
 
-
-
-
-+------------------------+------------+----------------------------------------+
-| Parameter              | Required   | Description                            |
-|                        |            |                                        |
-+========================+============+========================================+
-| TODO                   | column 2   | TODO                                   |
-|                        |            |                                        |
-+------------------------+------------+----------------------------------------+
-| TODO                   | column 2   | TODO                                   |
-|                        |            |                                        |
-+------------------------+------------+----------------------------------------+
-
-+------------------------+------------+----------+----------+
-| Header row, column 1   | Header 2   | Header 3 | Header 4 |
-| (header rows optional) |            |          |          |
-+========================+============+==========+==========+
-| body row 1, column 1   | column 2   | column 3 | column 4 |
-+------------------------+------------+----------+----------+
-| body row 2             | Cells may span columns.          |
-+------------------------+------------+---------------------+
-| body row 3             | Cells may  | - Table cells       |
-+------------------------+ span rows. | - contain           |
-| body row 4             |            | - body elements.    |
-+------------------------+------------+----------+----------+
-| body row 5             | Cells may also be     |          |
-|                        | empty: ``--&gt;``        |          |
-+------------------------+-----------------------+----------+
-
-=====  =====  ======
-   Inputs     Output
-------------  ------
-  A      B    A or B
-=====  =====  ======
-False  False  False
-True   False  True
-False  True   True
-True   True   True
-=====  =====  ======
-
-
-Parameters
-----------
-todo  : str, optional
-    this is a test 1
-todo2 : bool
-    this is a test 2
 
 &#34;&#34;&#34;
 
@@ -219,7 +96,6 @@ __all__ = [
 <div class="toc">
 <ul>
 <li><a href="#step-configuration">Step Configuration</a></li>
-<li><a href="#parameters">Parameters</a></li>
 </ul>
 </div>
 <ul id="index">
