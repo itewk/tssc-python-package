@@ -48,6 +48,23 @@ accept minimally the following configuration options.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="results">Results</h2>
+<p>All tssc.StepImplementers for this step should
+minimally produce the following step results.</p>
+<table>
+<thead>
+<tr>
+<th>Result Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image_tag</code></td>
+<td>TODO</td>
+</tr>
+</tbody>
+</table>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -65,6 +82,14 @@ accept minimally the following configuration options.
 | `context`       | Parent path to the image specification file
 | `tlsverify`     | Verify TLS certs when pulling images?
 
+Results
+-------
+All tssc.StepImplementers for this step should
+minimally produce the following step results.
+
+| Result Key       | Description
+|------------------|------------
+| `image_tag`      | TODO
 
 &#34;&#34;&#34;
 
@@ -96,6 +121,7 @@ __all__ = [
 <div class="toc">
 <ul>
 <li><a href="#step-configuration">Step Configuration</a></li>
+<li><a href="#results">Results</a></li>
 </ul>
 </div>
 <ul id="index">
