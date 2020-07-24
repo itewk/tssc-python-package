@@ -58,8 +58,8 @@ class Git(StepImplementer):
         If git commands fail for any reason
     &#34;&#34;&#34;
 
-    def __init__(self, config, results_dir, results_file_name):
-        super().__init__(config, results_dir, results_file_name, DEFAULT_ARGS)
+    def __init__(self, config, results_dir, results_file_name, work_dir_path):
+        super().__init__(config, results_dir, results_file_name, work_dir_path, DEFAULT_ARGS)
 
     @classmethod
     def step_name(cls):
@@ -137,9 +137,8 @@ class Git(StepImplementer):
         if runtime_step_config.get(&#39;git_url&#39;):
             return_val = runtime_step_config.get(&#39;git_url&#39;)
         else:
-            git_config = sh.git.bake(&#34;config&#34;)
             try:
-                return_val = git_config(
+                return_val = sh.git.config(
                     &#39;--get&#39;,
                     &#39;remote.origin.url&#39;).stdout.decode(&#34;utf-8&#34;).rstrip()
             except sh.ErrorReturnCode:  # pylint: disable=undefined-variable # pragma: no cover
@@ -148,22 +147,24 @@ class Git(StepImplementer):
 
     @staticmethod
     def _git_tag(git_tag_value): # pragma: no cover
-        git_tag = sh.git.bake(&#34;tag&#34;)
         try:
-            git_tag(git_tag_value)
+            # NOTE:
+            # this force is only needed locally in case of a re-reun of the same pipeline
+            # without a fresh check out. You will notice there is no force on the push
+            # making this an acceptable work around to the issue since on the off chance
+            # actually orverwriting a tag with a different comment, the push will fail
+            # because the tag will be attached to a different git hash.
+            sh.git.tag(git_tag_value, &#39;-f&#39;)
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git tag &#39; + git_tag_value)
 
     @staticmethod
     def _git_push(url=None): # pragma: no cover
-        git_push = sh.git.bake(&#34;push&#34;)
         try:
             if url:
-                git_push(
-                    url,
-                    &#39;--tag&#39;)
+                sh.git.push(url, &#39;--tag&#39;)
             else:
-                git_push(&#39;--tag&#39;)
+                sh.git.push(&#39;--tag&#39;)
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git push&#39;)
 
@@ -182,7 +183,7 @@ TSSCFactory.register_step_implementer(Git, True)</code></pre>
 <dl>
 <dt id="tssc.step_implementers.tag_source.git.Git"><code class="flex name class">
 <span>class <span class="ident">Git</span></span>
-<span>(</span><span>config, results_dir, results_file_name)</span>
+<span>(</span><span>config, results_dir, results_file_name, work_dir_path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>StepImplementer for the tag-source step for Git.</p>
@@ -216,8 +217,8 @@ for http and https git repos, and that is a desired use case.</p>
         If git commands fail for any reason
     &#34;&#34;&#34;
 
-    def __init__(self, config, results_dir, results_file_name):
-        super().__init__(config, results_dir, results_file_name, DEFAULT_ARGS)
+    def __init__(self, config, results_dir, results_file_name, work_dir_path):
+        super().__init__(config, results_dir, results_file_name, work_dir_path, DEFAULT_ARGS)
 
     @classmethod
     def step_name(cls):
@@ -295,9 +296,8 @@ for http and https git repos, and that is a desired use case.</p>
         if runtime_step_config.get(&#39;git_url&#39;):
             return_val = runtime_step_config.get(&#39;git_url&#39;)
         else:
-            git_config = sh.git.bake(&#34;config&#34;)
             try:
-                return_val = git_config(
+                return_val = sh.git.config(
                     &#39;--get&#39;,
                     &#39;remote.origin.url&#39;).stdout.decode(&#34;utf-8&#34;).rstrip()
             except sh.ErrorReturnCode:  # pylint: disable=undefined-variable # pragma: no cover
@@ -306,22 +306,24 @@ for http and https git repos, and that is a desired use case.</p>
 
     @staticmethod
     def _git_tag(git_tag_value): # pragma: no cover
-        git_tag = sh.git.bake(&#34;tag&#34;)
         try:
-            git_tag(git_tag_value)
+            # NOTE:
+            # this force is only needed locally in case of a re-reun of the same pipeline
+            # without a fresh check out. You will notice there is no force on the push
+            # making this an acceptable work around to the issue since on the off chance
+            # actually orverwriting a tag with a different comment, the push will fail
+            # because the tag will be attached to a different git hash.
+            sh.git.tag(git_tag_value, &#39;-f&#39;)
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git tag &#39; + git_tag_value)
 
     @staticmethod
     def _git_push(url=None): # pragma: no cover
-        git_push = sh.git.bake(&#34;push&#34;)
         try:
             if url:
-                git_push(
-                    url,
-                    &#39;--tag&#39;)
+                sh.git.push(url, &#39;--tag&#39;)
             else:
-                git_push(&#39;--tag&#39;)
+                sh.git.push(&#39;--tag&#39;)
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git push&#39;)</code></pre>
 </details>
@@ -342,6 +344,7 @@ for http and https git repos, and that is a desired use case.</p>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_config" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_config">step_config</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_name" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_name">step_name</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.write_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_results">write_results</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.write_temp_file" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_temp_file">write_temp_file</a></code></li>
 </ul>
 </li>
 </ul>

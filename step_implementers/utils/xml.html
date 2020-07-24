@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.4" />
-<title>tssc.step_implementers.uat.cucumber API documentation</title>
-<meta name="description" content="Step Implementer for the cucumber step for Cucumber." />
+<title>tssc.step_implementers.utils.xml API documentation</title>
+<meta name="description" content="Shared utils for steps that deal with XML." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -19,54 +19,62 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>tssc.step_implementers.uat.cucumber</code></h1>
+<h1 class="title">Module <code>tssc.step_implementers.utils.xml</code></h1>
 </header>
 <section id="section-intro">
-<p>Step Implementer for the cucumber step for Cucumber.</p>
+<p>Shared utils for steps that deal with XML.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Step Implementer for the cucumber step for Cucumber.
+Shared utils for steps that deal with XML.
 &#34;&#34;&#34;
 
-from tssc import TSSCFactory
-from tssc import StepImplementer
-from tssc import DefaultSteps
+import re
+import os.path
+from xml.etree import ElementTree
 
-DEFAULT_ARGS = {}
+def get_xml_element(xml_file, element_name):
+    &#34;&#34;&#34; Gets a given element from a given xml file.
 
-class Cucumber(StepImplementer):
+    Raises
+    ------
+    ValueError
+        If the given xml_file does not exist.
+        If the given xml_file does not contain an element with the given element_name.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The Element matching the given element_name.
     &#34;&#34;&#34;
-    StepImplementer for the cucumber step for Cucumber.
-    &#34;&#34;&#34;
 
-    def __init__(self, config, results_dir, results_file_name, work_dir_path):
-        super().__init__(config, results_dir, results_file_name, work_dir_path, DEFAULT_ARGS)
+    # verify runtime config
+    if not os.path.exists(xml_file):
+        raise ValueError(&#39;Given xml file does not exist: &#39; + xml_file)
 
-    @classmethod
-    def step_name(cls):
-        return DefaultSteps.UAT
+    # parse the xml file and figure out the namespace if there is one
+    xml_xml = ElementTree.parse(xml_file)
+    xml_root = xml_xml.getroot()
+    xml_namespace_match = re.match(r&#39;\{.*}&#39;, str(xml_root.tag))
+    xml_namespace = &#39;&#39;
+    if xml_namespace_match:
+        xml_namespace = xml_namespace_match.group(0)
 
-    def _validate_step_config(self, step_config):
-        &#34;&#34;&#34;
-        Function for implementers to override to do custom step config validation.
+    # extract needed information from the xml file
+    xml_element = xml_xml.getroot().find(&#39;./&#39; + xml_namespace + element_name)
 
-        Parameters
-        ----------
-        step_config : dict
-            Step configuration to validate.
-        &#34;&#34;&#34;
+    # verify information from xml file
+    if xml_element is None:
+        raise ValueError(&#39;Given xml file (&#39; + \
+             xml_file + \
+             &#39;) does not have ./&#39; + \
+             element_name + \
+             &#39; element&#39; \
+        )
 
-    def _run_step(self, runtime_step_config):
-        results = {
-        }
-
-        return results
-
-# register step implementer
-TSSCFactory.register_step_implementer(Cucumber)</code></pre>
+    return xml_element</code></pre>
 </details>
 </section>
 <section>
@@ -74,71 +82,73 @@ TSSCFactory.register_step_implementer(Cucumber)</code></pre>
 <section>
 </section>
 <section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="tssc.step_implementers.uat.cucumber.Cucumber"><code class="flex name class">
-<span>class <span class="ident">Cucumber</span></span>
-<span>(</span><span>config, results_dir, results_file_name, work_dir_path)</span>
+<dt id="tssc.step_implementers.utils.xml.get_xml_element"><code class="name flex">
+<span>def <span class="ident">get_xml_element</span></span>(<span>xml_file, element_name)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>StepImplementer for the cucumber step for Cucumber.</p></div>
+<div class="desc"><p>Gets a given element from a given xml file.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the given xml_file does not exist.
+If the given xml_file does not contain an element with the given element_name.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>xml.etree.ElementTree.Element</code></dt>
+<dd>The Element matching the given element_name.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Cucumber(StepImplementer):
+<pre><code class="python">def get_xml_element(xml_file, element_name):
+    &#34;&#34;&#34; Gets a given element from a given xml file.
+
+    Raises
+    ------
+    ValueError
+        If the given xml_file does not exist.
+        If the given xml_file does not contain an element with the given element_name.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The Element matching the given element_name.
     &#34;&#34;&#34;
-    StepImplementer for the cucumber step for Cucumber.
-    &#34;&#34;&#34;
 
-    def __init__(self, config, results_dir, results_file_name, work_dir_path):
-        super().__init__(config, results_dir, results_file_name, work_dir_path, DEFAULT_ARGS)
+    # verify runtime config
+    if not os.path.exists(xml_file):
+        raise ValueError(&#39;Given xml file does not exist: &#39; + xml_file)
 
-    @classmethod
-    def step_name(cls):
-        return DefaultSteps.UAT
+    # parse the xml file and figure out the namespace if there is one
+    xml_xml = ElementTree.parse(xml_file)
+    xml_root = xml_xml.getroot()
+    xml_namespace_match = re.match(r&#39;\{.*}&#39;, str(xml_root.tag))
+    xml_namespace = &#39;&#39;
+    if xml_namespace_match:
+        xml_namespace = xml_namespace_match.group(0)
 
-    def _validate_step_config(self, step_config):
-        &#34;&#34;&#34;
-        Function for implementers to override to do custom step config validation.
+    # extract needed information from the xml file
+    xml_element = xml_xml.getroot().find(&#39;./&#39; + xml_namespace + element_name)
 
-        Parameters
-        ----------
-        step_config : dict
-            Step configuration to validate.
-        &#34;&#34;&#34;
+    # verify information from xml file
+    if xml_element is None:
+        raise ValueError(&#39;Given xml file (&#39; + \
+             xml_file + \
+             &#39;) does not have ./&#39; + \
+             element_name + \
+             &#39; element&#39; \
+        )
 
-    def _run_step(self, runtime_step_config):
-        results = {
-        }
-
-        return results</code></pre>
+    return xml_element</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="tssc.step_implementer.StepImplementer" href="../../step_implementer.html#tssc.step_implementer.StepImplementer">StepImplementer</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="tssc.step_implementer.StepImplementer" href="../../step_implementer.html#tssc.step_implementer.StepImplementer">StepImplementer</a></b></code>:
-<ul class="hlist">
-<li><code><a title="tssc.step_implementer.StepImplementer.current_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.current_results">current_results</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.current_step_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.current_step_results">current_step_results</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.get_step_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.get_step_results">get_step_results</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.results_file_path" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.results_file_path">results_file_path</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.run_step" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.run_step">run_step</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.step_config" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_config">step_config</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.step_name" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_name">step_name</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.write_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_results">write_results</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.write_temp_file" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_temp_file">write_temp_file</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
+</section>
+<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -149,14 +159,12 @@ TSSCFactory.register_step_implementer(Cucumber)</code></pre>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="tssc.step_implementers.uat" href="index.html">tssc.step_implementers.uat</a></code></li>
+<li><code><a title="tssc.step_implementers.utils" href="index.html">tssc.step_implementers.utils</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="tssc.step_implementers.uat.cucumber.Cucumber" href="#tssc.step_implementers.uat.cucumber.Cucumber">Cucumber</a></code></h4>
-</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="tssc.step_implementers.utils.xml.get_xml_element" href="#tssc.step_implementers.utils.xml.get_xml_element">get_xml_element</a></code></li>
 </ul>
 </li>
 </ul>
