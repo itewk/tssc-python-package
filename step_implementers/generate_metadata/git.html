@@ -41,7 +41,7 @@ from runtime configuration.</p>
 <td><code>repo-root</code></td>
 <td>True</td>
 <td><code>./</code></td>
-<td></td>
+<td>Directory path to the Git repo to generate metadata from.</td>
 </tr>
 <tr>
 <td><code>build-string-length</code></td>
@@ -50,32 +50,18 @@ from runtime configuration.</p>
 <td>Length of the Git hash to use for the<br></td>
 </tr>
 <tr>
-<td><code>build</code> portion of the semantic version</td>
+<td><code>build</code> portion of the semantic version.</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 </tbody>
 </table>
-<p>TODO</p>
 <h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
 <p>Results expected from previous steps that this step requires.</p>
-<table>
-<thead>
-<tr>
-<th>Step Name</th>
-<th>Result Key</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>TODO</code></td>
-<td><code>TODO</code></td>
-<td>TODO</td>
-</tr>
-</tbody>
-</table>
+<div class="admonition note">
+<p class="admonition-title">Note:&ensp;This step implementer does not expect results from any previous steps.</p>
+</div>
 <h2 id="results">Results</h2>
 <p>Results output by this step.</p>
 <table>
@@ -119,20 +105,16 @@ from runtime configuration.
 
 | Configuration Key     | Required? | Default | Description
 |-----------------------|-----------|---------|-----------
-| `repo-root`           | True      | `./`    |
+| `repo-root`           | True      | `./`    | Directory path to the Git repo to generate metadata from.
 | `build-string-length` | True      | `7`     | Length of the Git hash to use for the&lt;br&gt;
-                                                `build` portion of the semantic version 
-
-TODO
+                                                `build` portion of the semantic version.
 
 Expected Previous Step Results
 ------------------------------
 
 Results expected from previous steps that this step requires.
 
-| Step Name | Result Key | Description
-|-----------|------------|------------
-| `TODO`    | `TODO`     | TODO
+.. Note:: This step implementer does not expect results from any previous steps.
 
 Results
 -------
