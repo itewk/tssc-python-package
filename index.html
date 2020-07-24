@@ -24,17 +24,16 @@
 <section id="section-intro">
 <p>Trusted Software Supply Chain Library (tssc) main entry point.</p>
 <h2 id="command-line-options">Command-Line Options</h2>
-<p>-h, &ndash;help
-show this help message and exit
--s STEP, &ndash;step STEP
-TSSC workflow step to run
--c CONFIG_FILE, &ndash;config-file CONFIG_FILE
-TSSC workflow configuration file in yml or json
--r RESULTS_DIR, &ndash;results-dir RESULTS_DIR
-TSSC workflow results file in yml or json
-&ndash;step-config STEP_CONFIG_KEY=STEP_CONFIG_VALUE [STEP_CONFIG_KEY=STEP_CONFIG_VALUE &hellip;]
-Override step config provided by the given TSSC
-config-file with these arguments.</p>
+<pre><code>-h, --help                                 show this help message and exit
+-s STEP, --step STEP                       TSSC workflow step to run
+-c CONFIG_FILE, --config-file CONFIG_FILE  TSSC workflow configuration file in yml or json
+-r RESULTS_DIR, --results-dir RESULTS_DIR  TSSC workflow results file in yml or json
+--step-config STEP_CONFIG_KEY=STEP_CONFIG_VALUE [STEP_CONFIG_KEY=STEP_CONFIG_VALUE ...]
+                                           Override step config provided by the given TSSC
+                                           config-file with these arguments.
+</code></pre>
+<h2 id="step-config">Step Config</h2>
+<p>test</p>
 <h2 id="examples">Examples</h2>
 <p>Getting Help</p>
 <pre><code class="python">&gt;&gt;&gt; python -m tssc --help
@@ -54,14 +53,18 @@ config-file with these arguments.</p>
 Command-Line Options
 --------------------
 
--h, --help                                 show this help message and exit
--s STEP, --step STEP                       TSSC workflow step to run
--c CONFIG_FILE, --config-file CONFIG_FILE  TSSC workflow configuration file in yml or json
--r RESULTS_DIR, --results-dir RESULTS_DIR  TSSC workflow results file in yml or json
---step-config STEP_CONFIG_KEY=STEP_CONFIG_VALUE [STEP_CONFIG_KEY=STEP_CONFIG_VALUE ...]
-                                           Override step config provided by the given TSSC
-                                           config-file with these arguments.
+    -h, --help                                 show this help message and exit
+    -s STEP, --step STEP                       TSSC workflow step to run
+    -c CONFIG_FILE, --config-file CONFIG_FILE  TSSC workflow configuration file in yml or json
+    -r RESULTS_DIR, --results-dir RESULTS_DIR  TSSC workflow results file in yml or json
+    --step-config STEP_CONFIG_KEY=STEP_CONFIG_VALUE [STEP_CONFIG_KEY=STEP_CONFIG_VALUE ...]
+                                               Override step config provided by the given TSSC
+                                               config-file with these arguments.
 
+Step Config
+-----------
+
+test
 
 Examples
 --------
@@ -123,6 +126,7 @@ from .step_implementer import DefaultSteps, StepImplementer</code></pre>
 <div class="toc">
 <ul>
 <li><a href="#command-line-options">Command-Line Options</a></li>
+<li><a href="#step-config">Step Config</a></li>
 <li><a href="#examples">Examples</a></li>
 </ul>
 </div>
