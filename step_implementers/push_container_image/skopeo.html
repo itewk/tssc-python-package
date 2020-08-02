@@ -38,10 +38,22 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
+<td><code>destination</code></td>
 <td>True</td>
 <td></td>
-<td></td>
+<td>Container image repository destination to push image to</td>
+</tr>
+<tr>
+<td><code>src-tls-verify</code></td>
+<td>True</td>
+<td><code>'true'</code></td>
+<td>Whether to very TLS for source of image</td>
+</tr>
+<tr>
+<td><code>dest-tls-verify</code></td>
+<td>True</td>
+<td><code>'true'</code></td>
+<td>Whether to verify TLS for destination of image</td>
 </tr>
 </tbody>
 </table>
@@ -57,9 +69,14 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>generate-metadata</code></td>
+<td><code>image-tag</code></td>
+<td>Tag to push image with</td>
+</tr>
+<tr>
+<td><code>create-container-image</code></td>
+<td><code>image-tar-file</code></td>
+<td>Local tar file of image to push</td>
 </tr>
 </tbody>
 </table>
@@ -74,18 +91,11 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>image-tag</code></td>
+<td>Pushed destination image tag</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Example</strong></p>
-<pre><code>'tssc-results': {
-    'TODO': {
-        'TODO': ''
-    }
-}
-</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -99,36 +109,31 @@ Step configuration expected as input to this step.
 Could come from either configuration file or
 from runtime configuration.
 
-| Configuration Key | Required? | Default | Description
-|-------------------|-----------|---------|-----------
-| `TODO`            | True      |         |
+| Configuration Key | Required? | Default  | Description
+|-------------------|-----------|----------|-----------
+| `destination`     | True      |          | Container image repository destination to push image to
+| `src-tls-verify`  | True      | `&#39;true&#39;` | Whether to very TLS for source of image
+| `dest-tls-verify` | True      | `&#39;true&#39;` | Whether to verify TLS for destination of image
 
 Expected Previous Step Results
 ------------------------------
 
 Results expected from previous steps that this step requires.
 
-| Step Name | Result Key | Description
-|-----------|------------|------------
-| `TODO`    | `TODO`     | TODO
+| Step Name                | Result Key       | Description
+|--------------------------|------------------|------------
+| `generate-metadata`      | `image-tag`      | Tag to push image with
+| `create-container-image` | `image-tar-file` | Local tar file of image to push
 
 Results
 -------
 
 Results output by this step.
 
-| Result Key | Description
-|------------|------------
-| `TODO`     | TODO
+| Result Key  | Description
+|-------------|------------
+| `image-tag` | Pushed destination image tag
 
-
-**Example**
-
-    &#39;tssc-results&#39;: {
-        &#39;TODO&#39;: {
-            &#39;TODO&#39;: &#39;&#39;
-        }
-    }
 &#34;&#34;&#34;
 import sys
 import sh
@@ -185,17 +190,17 @@ class Skopeo(StepImplementer):
     def _run_step(self, runtime_step_config):
 
         version = &#34;latest&#34;
-        if(self.get_step_results(&#39;generate-metadata&#39;) and \
-          self.get_step_results(&#39;generate-metadata&#39;).get(&#39;image-tag&#39;)):
-            version = self.get_step_results(&#39;generate-metadata&#39;)[&#39;image-tag&#39;]
+        if(self.get_step_results(DefaultSteps.GENERATE_METADATA) and \
+          self.get_step_results(DefaultSteps.GENERATE_METADATA).get(&#39;image-tag&#39;)):
+            version = self.get_step_results(DefaultSteps.GENERATE_METADATA)[&#39;image-tag&#39;]
         else:
             print(&#39;No version found in metadata. Using latest&#39;)
 
         image_tar_file = &#39;&#39;
         if(self.get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE) and \
-          self.get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE).get(&#39;image_tar_file&#39;)):
+          self.get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE).get(&#39;image-tar-file&#39;)):
             image_tar_file = self.\
-            get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE)[&#39;image_tar_file&#39;]
+            get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE)[&#39;image-tar-file&#39;]
         else:
             raise RuntimeError(&#39;Missing image tar file from &#39; + DefaultSteps.CREATE_CONTAINER_IMAGE)
 
@@ -205,7 +210,7 @@ class Skopeo(StepImplementer):
                 sh.skopeo.copy( #pylint: disable=no-member
                     &#39;--src-tls-verify=&#39; + runtime_step_config[&#39;src-tls-verify&#39;],
                     &#39;--dest-tls-verify=&#39; + runtime_step_config[&#39;dest-tls-verify&#39;],
-                    &#39;docker-archive:/&#39; + image_tar_file,
+                    &#39;docker-archive:&#39; + image_tar_file,
                     destination_with_version, _out=sys.stdout
                 )
             )
@@ -213,7 +218,7 @@ class Skopeo(StepImplementer):
             raise RuntimeError(&#39;Error invoking skopeo: {error}&#39;.format(error=error))
 
         results = {
-            &#39;image_tag&#39; : destination_with_version
+            &#39;image-tag&#39; : destination_with_version
         }
 
         return results
@@ -288,17 +293,17 @@ TSSCFactory.register_step_implementer(Skopeo, True)</code></pre>
     def _run_step(self, runtime_step_config):
 
         version = &#34;latest&#34;
-        if(self.get_step_results(&#39;generate-metadata&#39;) and \
-          self.get_step_results(&#39;generate-metadata&#39;).get(&#39;image-tag&#39;)):
-            version = self.get_step_results(&#39;generate-metadata&#39;)[&#39;image-tag&#39;]
+        if(self.get_step_results(DefaultSteps.GENERATE_METADATA) and \
+          self.get_step_results(DefaultSteps.GENERATE_METADATA).get(&#39;image-tag&#39;)):
+            version = self.get_step_results(DefaultSteps.GENERATE_METADATA)[&#39;image-tag&#39;]
         else:
             print(&#39;No version found in metadata. Using latest&#39;)
 
         image_tar_file = &#39;&#39;
         if(self.get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE) and \
-          self.get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE).get(&#39;image_tar_file&#39;)):
+          self.get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE).get(&#39;image-tar-file&#39;)):
             image_tar_file = self.\
-            get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE)[&#39;image_tar_file&#39;]
+            get_step_results(DefaultSteps.CREATE_CONTAINER_IMAGE)[&#39;image-tar-file&#39;]
         else:
             raise RuntimeError(&#39;Missing image tar file from &#39; + DefaultSteps.CREATE_CONTAINER_IMAGE)
 
@@ -308,7 +313,7 @@ TSSCFactory.register_step_implementer(Skopeo, True)</code></pre>
                 sh.skopeo.copy( #pylint: disable=no-member
                     &#39;--src-tls-verify=&#39; + runtime_step_config[&#39;src-tls-verify&#39;],
                     &#39;--dest-tls-verify=&#39; + runtime_step_config[&#39;dest-tls-verify&#39;],
-                    &#39;docker-archive:/&#39; + image_tar_file,
+                    &#39;docker-archive:&#39; + image_tar_file,
                     destination_with_version, _out=sys.stdout
                 )
             )
@@ -316,7 +321,7 @@ TSSCFactory.register_step_implementer(Skopeo, True)</code></pre>
             raise RuntimeError(&#39;Error invoking skopeo: {error}&#39;.format(error=error))
 
         results = {
-            &#39;image_tag&#39; : destination_with_version
+            &#39;image-tag&#39; : destination_with_version
         }
 
         return results</code></pre>

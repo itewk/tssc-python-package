@@ -29,14 +29,31 @@ accept minimally the following configuration options.</p>
 <table>
 <thead>
 <tr>
-<th>Parameter</th>
+<th>Configuration Key</th>
+<th>Required?</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>url</code></td>
+<td>False</td>
+<td>URL to the source repository to tag. Default to current directory</td>
+</tr>
+<tr>
+<td>source repository URL if not specified.</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>False</td>
+<td>Username to authenticate with the source repository if needed</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>False</td>
+<td>Password to authenticate with the source repository if needed</td>
 </tr>
 </tbody>
 </table>
@@ -52,8 +69,8 @@ minimally produce the following step results.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>tag</code></td>
+<td>This is the value that was used to tag the source.</td>
 </tr>
 </tbody>
 </table>
@@ -68,18 +85,21 @@ Step Configuration
 All tssc.StepImplementers for this step should
 accept minimally the following configuration options.
 
-| Parameter       | Description
-|-----------------|------------
-| `TODO`          | TODO
+| Configuration Key | Required? | Description
+|-------------------|-----------|-----------
+| `url`             | False     | URL to the source repository to tag. Default to current directory
+                                  source repository URL if not specified.
+| `username`        | False     | Username to authenticate with the source repository if needed
+| `password`        | False     | Password to authenticate with the source repository if needed
 
 Results
 -------
 All tssc.StepImplementers for this step should
 minimally produce the following step results.
 
-| Result Key       | Description
-|------------------|------------
-| `TODO`           | TODO
+| Result Key | Description
+|------------|------------
+| `tag`      | This is the value that was used to tag the source.
 &#34;&#34;&#34;
 
 from .git import Git

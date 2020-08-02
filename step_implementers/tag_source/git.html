@@ -38,15 +38,85 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>True</td>
+<td><code>url</code></td>
+<td>False</td>
+<td>git url returned by</td>
+<td>This is the url for the git</td>
+</tr>
+<tr>
+<td>`git config &ndash;get
+server.</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>remote.origin.url`</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>in container</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>True (if url</td>
+<td>n/a</td>
+<td>This is the username to use.</td>
+</tr>
+<tr>
+<td>is http or https)
+Due to security concerns this</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>should only be only provided by</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>the runtime configuration</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>True (if url</td>
+<td>n/a</td>
+<td>This is the password to use.</td>
+</tr>
+<tr>
+<td>is http or https)
+Due to security concerns this</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>should only be only provided by</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>the runtime configuration</td>
+<td></td>
 <td></td>
 <td></td>
 </tr>
 </tbody>
 </table>
 <h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
-<p>Results expected from previous steps that this step requires.</p>
+<p>Results expected from previous steps that this step may require. If not found, it
+will attempt to tag the source with <code>latest</code></p>
 <table>
 <thead>
 <tr>
@@ -57,9 +127,19 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>generate-metadata</code></td>
+<td><code>version</code></td>
+<td>Semantic version, if not found this step</td>
+</tr>
+<tr>
+<td>will use <code>latest</code> as the version to perform</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>the git tag with</td>
+<td></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -74,15 +154,15 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>tag</code></td>
+<td>This is the value that was used to tag the source.</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Example</strong></p>
 <pre><code>'tssc-results': {
-    'TODO': {
-        'TODO': ''
+    'tag-source': {
+        'git-tag': 'latest'
     }
 }
 </code></pre>
@@ -99,18 +179,32 @@ Step configuration expected as input to this step.
 Could come from either configuration file or
 from runtime configuration.
 
-| Configuration Key | Required? | Default | Description
-|-------------------|-----------|---------|-----------
-| `TODO`            | True      |         |
+| Configuration Key | Required?          | Default              | Description
+|-------------------|--------------------|----------------------|-----------
+| `url`             | False              | git url returned by  | This is the url for the git
+                                           `git config --get      server.
+                                           remote.origin.url`
+                                           in container
+| `username`        | True (if url       | n/a                  | This is the username to use.
+                      is http or https)                           Due to security concerns this
+                                                                  should only be only provided by
+                                                                  the runtime configuration
+| `password`        | True (if url       | n/a                  | This is the password to use.
+                      is http or https)                           Due to security concerns this
+                                                                  should only be only provided by
+                                                                  the runtime configuration
 
 Expected Previous Step Results
 ------------------------------
 
-Results expected from previous steps that this step requires.
+Results expected from previous steps that this step may require. If not found, it
+will attempt to tag the source with `latest`
 
-| Step Name | Result Key | Description
-|-----------|------------|------------
-| `TODO`    | `TODO`     | TODO
+| Step Name           | Result Key | Description
+|---------------------|------------|------------
+| `generate-metadata` | `version`  | Semantic version, if not found this step
+                                     will use `latest` as the version to perform
+                                     the git tag with
 
 Results
 -------
@@ -119,14 +213,14 @@ Results output by this step.
 
 | Result Key | Description
 |------------|------------
-| `TODO`     | TODO
+| `tag`      | This is the value that was used to tag the source.
 
 
 **Example**
 
     &#39;tssc-results&#39;: {
-        &#39;TODO&#39;: {
-            &#39;TODO&#39;: &#39;&#39;
+        &#39;tag-source&#39;: {
+            &#39;git-tag&#39;: &#39;latest&#39;
         }
     }
 &#34;&#34;&#34;
@@ -186,8 +280,8 @@ class Git(StepImplementer):
     def _get_tag(self):
         tag = &#39;latest&#39;
         if(self.get_step_results(&#39;generate-metadata&#39;) \
-          and self.get_step_results(&#39;generate-metadata&#39;).get(&#39;image-tag&#39;)):
-            tag = self.get_step_results(&#39;generate-metadata&#39;).get(&#39;image-tag&#39;)
+          and self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)):
+            tag = self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)
         else:
             print(&#39;No version found in metadata. Using latest&#39;)
         return tag
@@ -227,15 +321,15 @@ class Git(StepImplementer):
         else:
             self._git_push(None)
         results = {
-            &#39;git_tag&#39; : tag
+            &#39;tag&#39; : tag
         }
         return results
 
     @staticmethod
     def _git_url(runtime_step_config):
         return_val = None
-        if runtime_step_config.get(&#39;git_url&#39;):
-            return_val = runtime_step_config.get(&#39;git_url&#39;)
+        if runtime_step_config.get(&#39;url&#39;):
+            return_val = runtime_step_config.get(&#39;url&#39;)
         else:
             try:
                 return_val = sh.git.config(
@@ -345,8 +439,8 @@ for http and https git repos, and that is a desired use case.</p>
     def _get_tag(self):
         tag = &#39;latest&#39;
         if(self.get_step_results(&#39;generate-metadata&#39;) \
-          and self.get_step_results(&#39;generate-metadata&#39;).get(&#39;image-tag&#39;)):
-            tag = self.get_step_results(&#39;generate-metadata&#39;).get(&#39;image-tag&#39;)
+          and self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)):
+            tag = self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)
         else:
             print(&#39;No version found in metadata. Using latest&#39;)
         return tag
@@ -386,15 +480,15 @@ for http and https git repos, and that is a desired use case.</p>
         else:
             self._git_push(None)
         results = {
-            &#39;git_tag&#39; : tag
+            &#39;tag&#39; : tag
         }
         return results
 
     @staticmethod
     def _git_url(runtime_step_config):
         return_val = None
-        if runtime_step_config.get(&#39;git_url&#39;):
-            return_val = runtime_step_config.get(&#39;git_url&#39;)
+        if runtime_step_config.get(&#39;url&#39;):
+            return_val = runtime_step_config.get(&#39;url&#39;)
         else:
             try:
                 return_val = sh.git.config(

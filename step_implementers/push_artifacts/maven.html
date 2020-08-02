@@ -38,10 +38,22 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
+<td><code>url</code></td>
 <td>True</td>
 <td></td>
+<td>URL to the artifact repository to push the artifact to.</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>False</td>
 <td></td>
+<td>User to authenticate with the artifact repository.</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>False</td>
+<td></td>
+<td>Password to authenticate with the artifact repository.</td>
 </tr>
 </tbody>
 </table>
@@ -57,9 +69,14 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td><code>TODO</code></td>
+<td><code>generate-metadata</code></td>
+<td><code>version</code></td>
 <td>TODO</td>
+</tr>
+<tr>
+<td><code>package</code></td>
+<td><code>artifacts</code></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -74,18 +91,43 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>artifacts</code></td>
+<td>An array of dictionaries with information on the pushed artifacts.</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Example</strong></p>
-<pre><code>'tssc-results': {
-    'TODO': {
-        'TODO': ''
-    }
-}
-</code></pre>
+<p><strong>artifacts</strong>
+Keys in the dictionary elements in the <code>artifacts</code> array in the step results.</p>
+<table>
+<thead>
+<tr>
+<th><code>artifacts</code> Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>URL to the artifact pushed to the artifact repository</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>Absolute path to the artifact pushed to the artifact repository</td>
+</tr>
+<tr>
+<td><code>artifact-id</code></td>
+<td>Maven artifact ID pushed to the artifact repository</td>
+</tr>
+<tr>
+<td><code>group-id</code></td>
+<td>Maven group ID pushed to the artifact repository</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>Version pushed to the artifact repository</td>
+</tr>
+</tbody>
+</table>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -101,34 +143,40 @@ from runtime configuration.
 
 | Configuration Key | Required? | Default | Description
 |-------------------|-----------|---------|-----------
-| `TODO`            | True      |         |
+| `url`             | True      |         | URL to the artifact repository to push the artifact to.
+| `user`            | False     |         | User to authenticate with the artifact repository.
+| `password`        | False     |         | Password to authenticate with the artifact repository.
+
 
 Expected Previous Step Results
 ------------------------------
 
 Results expected from previous steps that this step requires.
 
-| Step Name | Result Key | Description
-|-----------|------------|------------
-| `TODO`    | `TODO`     | TODO
+| Step Name           | Result Key  | Description
+|---------------------|-------------|------------
+| `generate-metadata` | `version`   | TODO
+| `package`           | `artifacts` |
 
 Results
 -------
 
 Results output by this step.
 
-| Result Key | Description
-|------------|------------
-| `TODO`     | TODO
+| Result Key  | Description
+|-------------|------------
+| `artifacts` | An array of dictionaries with information on the pushed artifacts.
 
+**artifacts**
+Keys in the dictionary elements in the `artifacts` array in the step results.
 
-**Example**
-
-    &#39;tssc-results&#39;: {
-        &#39;TODO&#39;: {
-            &#39;TODO&#39;: &#39;&#39;
-        }
-    }
+| `artifacts` Key | Description
+|-----------------|------------
+| `url`           | URL to the artifact pushed to the artifact repository
+| `path`          | Absolute path to the artifact pushed to the artifact repository
+| `artifact-id`   | Maven artifact ID pushed to the artifact repository
+| `group-id`      | Maven group ID pushed to the artifact repository
+| `version`       | Version pushed to the artifact repository
 &#34;&#34;&#34;
 import re
 import sh
@@ -167,8 +215,7 @@ class Maven(StepImplementer):
         if &#39;url&#39; not in step_config or not step_config[&#39;url&#39;]:
             raise ValueError(&#39;url must have none empty value in the step configuration&#39;)
 
-    @staticmethod
-    def _validate_runtime_step_config(runtime_step_config):
+    def _validate_runtime_step_config(self, runtime_step_config):
         if not all(element in runtime_step_config for element in OPTIONAL_ARGS) \
           and any(element in runtime_step_config for element in OPTIONAL_ARGS):
             raise ValueError(&#39;Either user or password is not set. Neither &#39; \
@@ -179,8 +226,6 @@ class Maven(StepImplementer):
         password = &#39;&#39;
 
         url = runtime_step_config[&#39;url&#39;]
-
-        self._validate_runtime_step_config(runtime_step_config)
 
         if any(element in runtime_step_config for element in OPTIONAL_ARGS):
             if(runtime_step_config.get(&#39;user&#39;) \
@@ -321,8 +366,7 @@ TSSCFactory.register_step_implementer(Maven)</code></pre>
         if &#39;url&#39; not in step_config or not step_config[&#39;url&#39;]:
             raise ValueError(&#39;url must have none empty value in the step configuration&#39;)
 
-    @staticmethod
-    def _validate_runtime_step_config(runtime_step_config):
+    def _validate_runtime_step_config(self, runtime_step_config):
         if not all(element in runtime_step_config for element in OPTIONAL_ARGS) \
           and any(element in runtime_step_config for element in OPTIONAL_ARGS):
             raise ValueError(&#39;Either user or password is not set. Neither &#39; \
@@ -333,8 +377,6 @@ TSSCFactory.register_step_implementer(Maven)</code></pre>
         password = &#39;&#39;
 
         url = runtime_step_config[&#39;url&#39;]
-
-        self._validate_runtime_step_config(runtime_step_config)
 
         if any(element in runtime_step_config for element in OPTIONAL_ARGS):
             if(runtime_step_config.get(&#39;user&#39;) \

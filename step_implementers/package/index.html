@@ -52,8 +52,31 @@ minimally produce the following step results.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>TODO</code></td>
-<td>TODO</td>
+<td><code>artifacts</code></td>
+<td>An array of dictionaries with information on the built artifacts.</td>
+</tr>
+<tr>
+<td>Minimally each dictionary entry should have a <code>path</code> key with the absolute path</td>
+<td></td>
+</tr>
+<tr>
+<td>to the built artifact.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>artifacts</strong></p>
+<table>
+<thead>
+<tr>
+<th><code>artifacts</code> Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td>Absolute path to the built artifact</td>
 </tr>
 </tbody>
 </table>
@@ -79,7 +102,15 @@ minimally produce the following step results.
 
 | Result Key       | Description
 |------------------|------------
-| `TODO`           | TODO
+| `artifacts`      | An array of dictionaries with information on the built artifacts.
+                     Minimally each dictionary entry should have a `path` key with the absolute path
+                     to the built artifact.
+
+**artifacts**
+
+| `artifacts` Key | Description
+|-----------------|------------
+| `path`          | Absolute path to the built artifact
 &#34;&#34;&#34;
 
 from .maven import Maven
