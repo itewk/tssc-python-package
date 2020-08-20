@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.8.4" />
-<title>tssc.step_implementers.package.maven API documentation</title>
-<meta name="description" content="Step Implementer for the package step for Maven …" />
+<title>tssc.step_implementers.generate_metadata.npm API documentation</title>
+<meta name="description" content="Step Implementer for the generate-metadata step for npm …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
@@ -19,21 +19,10 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>tssc.step_implementers.package.maven</code></h1>
+<h1 class="title">Module <code>tssc.step_implementers.generate_metadata.npm</code></h1>
 </header>
 <section id="section-intro">
-<p>Step Implementer for the package step for Maven.</p>
-<h2 id="notes">Notes</h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This can currently only handle POMs that generate a single artifact.
-See <a href="https://projects.engineering.redhat.com/browse/NAPSSPO-546">https://projects.engineering.redhat.com/browse/NAPSSPO-546</a> for RFE
-to handle multiple artifacts.</p>
-</div>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>If package not specified in pom will default to jar in result.</p>
-</div>
+<p>Step Implementer for the generate-metadata step for npm.</p>
 <h2 id="step-configuration">Step Configuration</h2>
 <p>Step configuration expected as input to this step.
 Could come from either configuration file or
@@ -49,52 +38,26 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>pom-file</code></td>
-<td>True</td>
-<td><code>'pom.xml'</code></td>
-<td>Maven pom file to build</td>
-</tr>
-<tr>
-<td><code>artifact-extensions</code></td>
-<td>True</td>
-<td><code>["jar", "war", "ear"]</code></td>
-<td>Extensions to look for in the</td>
-</tr>
-<tr>
-<td><code>artifact-parent-dir</code> for built</td>
-<td></td>
+<td><code>package-file
+| True
+|</code>'package.json'`</td>
+<td>node.js package file to</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>artifacts.</td>
 <td></td>
 <td></td>
 <td></td>
-</tr>
-<tr>
-<td><code>artifact-parent-dir</code></td>
-<td>True</td>
-<td><code>'target'</code></td>
-<td>Parent directory to look for built</td>
-</tr>
-<tr>
-<td>artifacts in ending in</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><code>artifact-extensions</code>.</td>
-<td></td>
-<td></td>
-<td></td>
+<td>ead the app version out of</td>
 </tr>
 </tbody>
 </table>
 <h2 id="expected-previous-step-results">Expected Previous Step Results</h2>
 <p>Results expected from previous steps that this step requires.</p>
-<p>None.</p>
+<div class="admonition note">
+<p class="admonition-title">Note:&ensp;This step implementer does not expect results from any previous steps.</p>
+</div>
 <h2 id="results">Results</h2>
 <p>Results output by this step.</p>
 <table>
@@ -106,115 +69,17 @@ from runtime configuration.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>artifacts</code></td>
-<td>An array of dictionaries with information on the built artifacts.</td>
+<td><code>app-version</code></td>
+<td>Value to use for <code>version</code> portion of semantic version (<a href="https://semver.org/">https://semver.org/</a>).
+Uses the version read out of the given pom file.</td>
 </tr>
 </tbody>
 </table>
-<p><strong>artifacts</strong>
-Keys in the dictionary elements in the <code>artifacts</code> array in the step results.</p>
-<table>
-<thead>
-<tr>
-<th><code>artifacts</code> Key</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>path</code></td>
-<td>Absolute path to the built artifact.</td>
-</tr>
-<tr>
-<td><code>artifact-id</code></td>
-<td>Maven artifact ID.</td>
-</tr>
-<tr>
-<td><code>group-id</code></td>
-<td>Maven group ID.</td>
-</tr>
-<tr>
-<td><code>package-type</code></td>
-<td>Package type.</td>
-</tr>
-<tr>
-<td><code>pom-path</code></td>
-<td>Absolute path to the pom that built the artifact.</td>
-</tr>
-</tbody>
-</table>
-<h2 id="examples">Examples</h2>
-<p><strong>Example 1</strong></p>
-<p><em>Given POM</em></p>
-<pre><code>&lt;project&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-    &lt;groupId&gt;com.mycompany.app&lt;/groupId&gt;
-    &lt;artifactId&gt;my-app&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-    &lt;properties&gt;
-        &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
-        &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
-    &lt;/properties&gt;
-&lt;/project&gt;
-</code></pre>
-<p><em>Step Results after this Step Implementer</em></p>
-<pre><code>{'tssc-results': {
-    'package': [
-        {
-            'path': '{FULL_PATH_TO_GENERATED_ARTIFACT}',
-            'artifact-id': 'my-app',
-            'group-id': 'com.mycompany.app'
-            'package-type': 'jar',
-            'pom-path': '{FULL_PATH_TO_POM}'
-        }
-    ]
-}}
-</code></pre>
-<p><strong>Example 2</strong></p>
-<p><em>Given POM</em></p>
-<pre><code>&lt;project&gt;
-    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-    &lt;groupId&gt;com.mycompany.app&lt;/groupId&gt;
-    &lt;artifactId&gt;my-app&lt;/artifactId&gt;
-    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-    &lt;package&gt;war&lt;/package&gt;
-    &lt;properties&gt;
-        &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
-        &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
-    &lt;/properties&gt;
-&lt;/project&gt;
-</code></pre>
-<p><em>Step Results after this Step Implementer</em></p>
-<pre><code>{'tssc-results': {
-    'package': [
-        {
-            'path': '{FULL_PATH_TO_GENERATED_ARTIFACT}',
-            'artifact-id': 'my-app',
-            'group-id': 'com.mycompany.app'
-            'package-type': 'war',
-            'pom-path': '{FULL_PATH_TO_POM}'
-        }
-    ]
-}}
-</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Step Implementer for the package step for Maven.
-
-Notes
------
-
-.. WARNING::
-
-    This can currently only handle POMs that generate a single artifact.
-    See https://projects.engineering.redhat.com/browse/NAPSSPO-546 for RFE
-    to handle multiple artifacts.
-
-.. Important::
-
-    If package not specified in pom will default to jar in result.
+<pre><code class="python">&#34;&#34;&#34;Step Implementer for the generate-metadata step for npm.
 
 Step Configuration
 ------------------
@@ -223,131 +88,47 @@ Step configuration expected as input to this step.
 Could come from either configuration file or
 from runtime configuration.
 
-| Configuration Key     | Required? | Default                 | Description
-|-----------------------|-----------|-------------------------|-----------
-| `pom-file`            | True      | `&#39;pom.xml&#39;`             | Maven pom file to build
-| `artifact-extensions` | True      | `[&#34;jar&#34;, &#34;war&#34;, &#34;ear&#34;]` | Extensions to look for in the
-                                                                `artifact-parent-dir` for built
-                                                                artifacts.
-| `artifact-parent-dir` | True      | `&#39;target&#39;`              | Parent directory to look for built
-                                                                artifacts in ending in
-                                                                `artifact-extensions`.
+| Configuration Key | Required? | Default          | Description
+|-------------------|-----------|------------------|-----------
+| `package-file     | True      | `&#39;package.json&#39;` | node.js package file to
+|                   |            |                 | ead the app version out of
 
 Expected Previous Step Results
 ------------------------------
 
 Results expected from previous steps that this step requires.
 
-None.
+.. Note:: This step implementer does not expect results from any previous steps.
 
 Results
 -------
 
 Results output by this step.
 
-| Result Key  | Description
-|-------------|------------
-| `artifacts` | An array of dictionaries with information on the built artifacts.
-
-
-**artifacts**
-Keys in the dictionary elements in the `artifacts` array in the step results.
-
-| `artifacts` Key | Description
-|-----------------|------------
-| `path`          | Absolute path to the built artifact.
-| `artifact-id`   | Maven artifact ID.
-| `group-id`      | Maven group ID.
-| `package-type`  | Package type.
-| `pom-path`      | Absolute path to the pom that built the artifact.
-
-Examples
---------
-
-**Example 1**
-
-*Given POM*
-
-    &lt;project&gt;
-        &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-        &lt;groupId&gt;com.mycompany.app&lt;/groupId&gt;
-        &lt;artifactId&gt;my-app&lt;/artifactId&gt;
-        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-        &lt;properties&gt;
-            &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
-            &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
-        &lt;/properties&gt;
-    &lt;/project&gt;
-
-*Step Results after this Step Implementer*
-
-    {&#39;tssc-results&#39;: {
-        &#39;package&#39;: [
-            {
-                &#39;path&#39;: &#39;{FULL_PATH_TO_GENERATED_ARTIFACT}&#39;,
-                &#39;artifact-id&#39;: &#39;my-app&#39;,
-                &#39;group-id&#39;: &#39;com.mycompany.app&#39;
-                &#39;package-type&#39;: &#39;jar&#39;,
-                &#39;pom-path&#39;: &#39;{FULL_PATH_TO_POM}&#39;
-            }
-        ]
-    }}
-
-**Example 2**
-
-*Given POM*
-
-    &lt;project&gt;
-        &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
-        &lt;groupId&gt;com.mycompany.app&lt;/groupId&gt;
-        &lt;artifactId&gt;my-app&lt;/artifactId&gt;
-        &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
-        &lt;package&gt;war&lt;/package&gt;
-        &lt;properties&gt;
-            &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
-            &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
-        &lt;/properties&gt;
-    &lt;/project&gt;
-
-*Step Results after this Step Implementer*
-
-    {&#39;tssc-results&#39;: {
-        &#39;package&#39;: [
-            {
-                &#39;path&#39;: &#39;{FULL_PATH_TO_GENERATED_ARTIFACT}&#39;,
-                &#39;artifact-id&#39;: &#39;my-app&#39;,
-                &#39;group-id&#39;: &#39;com.mycompany.app&#39;
-                &#39;package-type&#39;: &#39;war&#39;,
-                &#39;pom-path&#39;: &#39;{FULL_PATH_TO_POM}&#39;
-            }
-        ]
-    }}
+| Result Key    | Description
+|---------------|------------
+| `app-version` | Value to use for `version` portion of semantic version (https://semver.org/). \
+                    Uses the version read out of the given pom file.
 &#34;&#34;&#34;
-import sys
-import os
-import sh
+
+import os.path
+import json
 
 from tssc import TSSCFactory
 from tssc import StepImplementer
 from tssc import DefaultSteps
 
-from tssc.step_implementers.utils.xml import get_xml_element
-
 DEFAULT_CONFIG = {
-    &#39;pom-file&#39;: &#39;pom.xml&#39;,
-    &#39;artifact-extensions&#39;: [&#34;jar&#34;, &#34;war&#34;, &#34;ear&#34;],
-    &#39;artifact-parent-dir&#39;: &#39;target&#39;
+    &#39;package-file&#39;: &#39;package.json&#39;
 }
 
 REQUIRED_CONFIG_KEYS = [
-    &#39;pom-file&#39;
+    &#39;package-file&#39;
 ]
 
-class Maven(StepImplementer):
+class Npm(StepImplementer): # pylint: disable=too-few-public-methods
     &#34;&#34;&#34;
-    StepImplementer for the package step for Maven. It is assumed thought that there will
-    only be a single jar, ear, or war output for running mvn clean install against the given
-    pom.xml file.
+    StepImplementer for the generate-metadata step for npm.
     &#34;&#34;&#34;
 
     @staticmethod
@@ -360,7 +141,7 @@ class Maven(StepImplementer):
         str
             TSSC step name implemented by this step.
         &#34;&#34;&#34;
-        return DefaultSteps.PACKAGE
+        return DefaultSteps.GENERATE_METADATA
 
     @staticmethod
     def step_implementer_config_defaults():
@@ -409,71 +190,27 @@ class Maven(StepImplementer):
         dict
             Results of running this step.
         &#34;&#34;&#34;
-        pom_file = runtime_step_config[&#39;pom-file&#39;]
-        artifact_extensions = runtime_step_config[&#39;artifact-extensions&#39;]
-        artifact_parent_dir = runtime_step_config[&#39;artifact-parent-dir&#39;]
+        package_file = runtime_step_config[&#39;package-file&#39;]
 
-        if not os.path.exists(pom_file):
-            raise ValueError(&#39;Given pom file does not exist: &#39; + pom_file)
+        # verify runtime config
+        if not os.path.exists(package_file):
+            raise ValueError(&#39;Given npm package file does not exist: &#39; + package_file)
 
-        try:
-            sh.mvn(  # pylint: disable=no-member,
-                &#39;clean&#39;,
-                &#39;install&#39;,
-                &#39;-f&#39;, pom_file,
-                _out=sys.stdout
-            )
-        except sh.ErrorReturnCode as error:
-            raise RuntimeError(&#34;Error invoking mvn: {error}&#34;.format(error=error))
+        with open(package_file) as package_file_object:
+            package_file_data = json.load(package_file_object)
 
-        # find the artifacts
-        artifact_file_names = []
-        artifact_parent_dir_full_path = \
-            os.listdir(os.path.join(
-                os.path.dirname(os.path.abspath(pom_file)),
-                artifact_parent_dir))
-        for filename in artifact_parent_dir_full_path:
-            if any(filename.endswith(ext) for ext in artifact_extensions):
-                artifact_file_names.append(filename)
-
-        # error if we find more then one artifact
-        # see https://projects.engineering.redhat.com/browse/NAPSSPO-546
-        if len(artifact_file_names) &gt; 1:
-            raise ValueError(
-                &#39;pom resulted in multiple artifacts with expected artifact extensions &#39; +
-                &#39;({artifact_extensions}), this is unsupported&#39;.format(
-                    artifact_extensions=artifact_extensions))
-
-        if len(artifact_file_names) &lt; 1:
-            raise ValueError(
-                &#39;pom resulted in 0 with expected artifact extensions &#39; +
-                &#39;({artifact_extensions}), this is unsupported&#39;.format(
-                    artifact_extensions=artifact_extensions))
-
-        artifact_id = get_xml_element(pom_file, &#39;artifactId&#39;).text
-        group_id = get_xml_element(pom_file, &#39;groupId&#39;).text
-        try:
-            package_type = get_xml_element(pom_file, &#39;package&#39;).text
-        except ValueError:
-            package_type = &#39;jar&#39;
+        if not &#34;version&#34; in package_file_data:
+            raise ValueError(&#39;Given npm package file: &#39; + package_file + \
+              &#39; does not contain a \&#34;version\&#34; key&#39;)
 
         results = {
-            &#39;artifacts&#39;: [{
-                &#39;path&#39;: os.path.join(
-                    os.path.dirname(os.path.abspath(pom_file)),
-                    artifact_parent_dir, artifact_file_names[0]
-                ),
-                &#39;artifact-id&#39;: artifact_id,
-                &#39;group-id&#39;: group_id,
-                &#39;package-type&#39;: package_type,
-                &#39;pom-path&#39;: pom_file
-            }]
+            &#39;app-version&#39;: package_file_data[&#34;version&#34;]
         }
+
         return results
 
-
 # register step implementer
-TSSCFactory.register_step_implementer(Maven)</code></pre>
+TSSCFactory.register_step_implementer(Npm)</code></pre>
 </details>
 </section>
 <section>
@@ -485,23 +222,19 @@ TSSCFactory.register_step_implementer(Maven)</code></pre>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="tssc.step_implementers.package.maven.Maven"><code class="flex name class">
-<span>class <span class="ident">Maven</span></span>
+<dt id="tssc.step_implementers.generate_metadata.npm.Npm"><code class="flex name class">
+<span>class <span class="ident">Npm</span></span>
 <span>(</span><span>results_dir_path, results_file_name, work_dir_path, step_environment_config=None, step_config=None, global_config_defaults=None, global_environment_config_defaults=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>StepImplementer for the package step for Maven. It is assumed thought that there will
-only be a single jar, ear, or war output for running mvn clean install against the given
-pom.xml file.</p></div>
+<div class="desc"><p>StepImplementer for the generate-metadata step for npm.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Maven(StepImplementer):
+<pre><code class="python">class Npm(StepImplementer): # pylint: disable=too-few-public-methods
     &#34;&#34;&#34;
-    StepImplementer for the package step for Maven. It is assumed thought that there will
-    only be a single jar, ear, or war output for running mvn clean install against the given
-    pom.xml file.
+    StepImplementer for the generate-metadata step for npm.
     &#34;&#34;&#34;
 
     @staticmethod
@@ -514,7 +247,7 @@ pom.xml file.</p></div>
         str
             TSSC step name implemented by this step.
         &#34;&#34;&#34;
-        return DefaultSteps.PACKAGE
+        return DefaultSteps.GENERATE_METADATA
 
     @staticmethod
     def step_implementer_config_defaults():
@@ -563,66 +296,23 @@ pom.xml file.</p></div>
         dict
             Results of running this step.
         &#34;&#34;&#34;
-        pom_file = runtime_step_config[&#39;pom-file&#39;]
-        artifact_extensions = runtime_step_config[&#39;artifact-extensions&#39;]
-        artifact_parent_dir = runtime_step_config[&#39;artifact-parent-dir&#39;]
+        package_file = runtime_step_config[&#39;package-file&#39;]
 
-        if not os.path.exists(pom_file):
-            raise ValueError(&#39;Given pom file does not exist: &#39; + pom_file)
+        # verify runtime config
+        if not os.path.exists(package_file):
+            raise ValueError(&#39;Given npm package file does not exist: &#39; + package_file)
 
-        try:
-            sh.mvn(  # pylint: disable=no-member,
-                &#39;clean&#39;,
-                &#39;install&#39;,
-                &#39;-f&#39;, pom_file,
-                _out=sys.stdout
-            )
-        except sh.ErrorReturnCode as error:
-            raise RuntimeError(&#34;Error invoking mvn: {error}&#34;.format(error=error))
+        with open(package_file) as package_file_object:
+            package_file_data = json.load(package_file_object)
 
-        # find the artifacts
-        artifact_file_names = []
-        artifact_parent_dir_full_path = \
-            os.listdir(os.path.join(
-                os.path.dirname(os.path.abspath(pom_file)),
-                artifact_parent_dir))
-        for filename in artifact_parent_dir_full_path:
-            if any(filename.endswith(ext) for ext in artifact_extensions):
-                artifact_file_names.append(filename)
-
-        # error if we find more then one artifact
-        # see https://projects.engineering.redhat.com/browse/NAPSSPO-546
-        if len(artifact_file_names) &gt; 1:
-            raise ValueError(
-                &#39;pom resulted in multiple artifacts with expected artifact extensions &#39; +
-                &#39;({artifact_extensions}), this is unsupported&#39;.format(
-                    artifact_extensions=artifact_extensions))
-
-        if len(artifact_file_names) &lt; 1:
-            raise ValueError(
-                &#39;pom resulted in 0 with expected artifact extensions &#39; +
-                &#39;({artifact_extensions}), this is unsupported&#39;.format(
-                    artifact_extensions=artifact_extensions))
-
-        artifact_id = get_xml_element(pom_file, &#39;artifactId&#39;).text
-        group_id = get_xml_element(pom_file, &#39;groupId&#39;).text
-        try:
-            package_type = get_xml_element(pom_file, &#39;package&#39;).text
-        except ValueError:
-            package_type = &#39;jar&#39;
+        if not &#34;version&#34; in package_file_data:
+            raise ValueError(&#39;Given npm package file: &#39; + package_file + \
+              &#39; does not contain a \&#34;version\&#34; key&#39;)
 
         results = {
-            &#39;artifacts&#39;: [{
-                &#39;path&#39;: os.path.join(
-                    os.path.dirname(os.path.abspath(pom_file)),
-                    artifact_parent_dir, artifact_file_names[0]
-                ),
-                &#39;artifact-id&#39;: artifact_id,
-                &#39;group-id&#39;: group_id,
-                &#39;package-type&#39;: package_type,
-                &#39;pom-path&#39;: pom_file
-            }]
+            &#39;app-version&#39;: package_file_data[&#34;version&#34;]
         }
+
         return results</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -659,23 +349,21 @@ pom.xml file.</p></div>
 <h1>Index</h1>
 <div class="toc">
 <ul>
-<li><a href="#notes">Notes</a></li>
 <li><a href="#step-configuration">Step Configuration</a></li>
 <li><a href="#expected-previous-step-results">Expected Previous Step Results</a></li>
 <li><a href="#results">Results</a></li>
-<li><a href="#examples">Examples</a></li>
 </ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="tssc.step_implementers.package" href="index.html">tssc.step_implementers.package</a></code></li>
+<li><code><a title="tssc.step_implementers.generate_metadata" href="index.html">tssc.step_implementers.generate_metadata</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="tssc.step_implementers.package.maven.Maven" href="#tssc.step_implementers.package.maven.Maven">Maven</a></code></h4>
+<h4><code><a title="tssc.step_implementers.generate_metadata.npm.Npm" href="#tssc.step_implementers.generate_metadata.npm.Npm">Npm</a></code></h4>
 </li>
 </ul>
 </li>

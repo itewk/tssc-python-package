@@ -224,17 +224,19 @@ Results output by this step.
         }
     }
 &#34;&#34;&#34;
+import sys
 import sh
 from tssc import TSSCFactory
 from tssc import StepImplementer
 from tssc import DefaultSteps
 
-DEFAULT_ARGS = {}
+DEFAULT_CONFIG = {}
 
-OPTIONAL_ARGS = {
+AUTHENTICATION_CONFIG = {
     &#39;username&#39;: None,
     &#39;password&#39;: None
 }
+
 
 class Git(StepImplementer):
     &#34;&#34;&#34;
@@ -243,64 +245,102 @@ class Git(StepImplementer):
     This makes extensive use of the python sh library. This was a deliberate choice,
     as the gitpython library doesn&#39;t appear to easily support username/password auth
     for http and https git repos, and that is a desired use case.
-
-    Raises
-    ------
-    ValueError
-        If a required parameter is unspecified
-    RuntimeError
-        If git commands fail for any reason
     &#34;&#34;&#34;
 
-    def __init__(self, config, results_dir, results_file_name, work_dir_path):
-        super().__init__(config, results_dir, results_file_name, work_dir_path, DEFAULT_ARGS)
+    @staticmethod
+    def step_name():
+        &#34;&#34;&#34;
+        Getter for the TSSC Step name implemented by this step.
 
-    @classmethod
-    def step_name(cls):
+        Returns
+        -------
+        str
+            TSSC step name implemented by this step.
+        &#34;&#34;&#34;
         return DefaultSteps.TAG_SOURCE
 
-    def _validate_step_config(self, step_config):
+    @staticmethod
+    def step_implementer_config_defaults():
         &#34;&#34;&#34;
-        Function for implementers to override to do custom step config validation.
+        Getter for the StepImplementer&#39;s configuration defaults.
+
+        Notes
+        -----
+        These are the lowest precedence configuration values.
+
+        Returns
+        -------
+        dict
+            Default values to use for step configuration values.
+        &#34;&#34;&#34;
+        return DEFAULT_CONFIG
+
+    @staticmethod
+    def required_runtime_step_config_keys():
+        &#34;&#34;&#34;
+        Getter for step configuration keys that are required before running the step.
+
+        See Also
+        --------
+        _validate_runtime_step_config
+
+        Returns
+        -------
+        array_list
+            Array of configuration keys that are required before running the step.
+        &#34;&#34;&#34;
+        return []
+
+    def _validate_runtime_step_config(self, runtime_step_config):
+        &#34;&#34;&#34;
+        Validates the given `runtime_step_config` against the required step configuration keys.
 
         Parameters
         ----------
-        step_config : dict
-            Step configuration to validate.
+        runtime_step_config : dict
+            Step configuration to use when the StepImplementer runs the step with all of the
+            various static, runtime, defaults, and environment configuration munged together.
+
+        Raises
+        ------
+        AssertionError
+            If the given `runtime_step_config` is not valid with a message as to why.
         &#34;&#34;&#34;
-        print(step_config)
+        super()._validate_runtime_step_config(runtime_step_config) #pylint: disable=protected-access
 
-    @staticmethod
-    def _validate_runtime_step_config(runtime_step_config):
-        if not all(element in runtime_step_config for element in OPTIONAL_ARGS) \
-          and any(element in runtime_step_config for element in OPTIONAL_ARGS):
-            raise ValueError(&#39;Either username or password is not set. Neither &#39; \
-              &#39;or both must be set.&#39;)
-
-    def _get_tag(self):
-        tag = &#39;latest&#39;
-        if(self.get_step_results(&#39;generate-metadata&#39;) \
-          and self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)):
-            tag = self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)
-        else:
-            print(&#39;No version found in metadata. Using latest&#39;)
-        return tag
+        assert ( \
+            all(element in runtime_step_config for element in AUTHENTICATION_CONFIG) or \
+            not any(element in runtime_step_config for element in AUTHENTICATION_CONFIG) \
+        ), &#39;Either username or password is not set. Neither or both must be set.&#39;
 
     def _run_step(self, runtime_step_config):
+        &#34;&#34;&#34;
+        Runs the TSSC step implemented by this StepImplementer.
+
+        Parameters
+        ----------
+        runtime_step_config : dict
+            Step configuration to use when the StepImplementer runs the step with all of the
+            various static, runtime, defaults, and environment configuration munged together.
+
+        Returns
+        -------
+        dict
+            Results of running this step.
+        &#34;&#34;&#34;
         username = None
         password = None
 
-
-        self._validate_runtime_step_config(runtime_step_config)
-
-        if any(element in runtime_step_config for element in OPTIONAL_ARGS):
+        if any(element in runtime_step_config for element in AUTHENTICATION_CONFIG):
             if(runtime_step_config.get(&#39;username&#39;) \
               and runtime_step_config.get(&#39;password&#39;)):
                 username = runtime_step_config.get(&#39;username&#39;)
                 password = runtime_step_config.get(&#39;password&#39;)
             else:
-                raise ValueError(&#39;Both username and password must have &#39; \
-                  &#39;non-empty value in the runtime step configuration&#39;)
+                raise ValueError(
+                    &#39;Both username and password must have &#39; \
+                    &#39;non-empty value in the runtime step configuration&#39;
+                )
         else:
             print(&#39;No username/password found, assuming ssh&#39;)
         tag = self._get_tag()
@@ -310,20 +350,33 @@ class Git(StepImplementer):
             if username and password:
                 self._git_push(&#39;http://&#39; + username + &#39;:&#39; + password + &#39;@&#39; + git_url[7:])
             else:
-                raise ValueError(&#39;For a http:// git url, you need to also provide &#39; \
-                  &#39;username/password pair&#39;)
+                raise ValueError(
+                    &#39;For a http:// git url, you need to also provide &#39; \
+                    &#39;username/password pair&#39;
+                )
         elif git_url.startswith(&#39;https://&#39;):
             if username and password:
                 self._git_push(&#39;https://&#39; + username + &#39;:&#39; + password + &#39;@&#39; + git_url[8:])
             else:
-                raise ValueError(&#39;For a https:// git url, you need to also provide &#39; \
-                  &#39;username/password pair&#39;)
+                raise ValueError(
+                    &#39;For a https:// git url, you need to also provide &#39; \
+                    &#39;username/password pair&#39;
+                )
         else:
             self._git_push(None)
         results = {
             &#39;tag&#39; : tag
         }
         return results
+
+    def _get_tag(self):
+        tag = &#39;latest&#39;
+        if(self.get_step_results(DefaultSteps.GENERATE_METADATA) \
+          and self.get_step_results(DefaultSteps.GENERATE_METADATA).get(&#39;version&#39;)):
+            tag = self.get_step_results(DefaultSteps.GENERATE_METADATA).get(&#39;version&#39;)
+        else:
+            print(&#39;No version found in metadata. Using latest&#39;)
+        return tag
 
     @staticmethod
     def _git_url(runtime_step_config):
@@ -334,13 +387,19 @@ class Git(StepImplementer):
             try:
                 return_val = sh.git.config(
                     &#39;--get&#39;,
-                    &#39;remote.origin.url&#39;).stdout.decode(&#34;utf-8&#34;).rstrip()
+                    &#39;remote.origin.url&#39;,
+                    _out=sys.stdout,
+                    _tee=True,
+                    _encoding=&#39;UTF-8&#39;,
+                    _decode_errors=&#39;ignore&#39;
+                    ).rstrip()
+
             except sh.ErrorReturnCode:  # pylint: disable=undefined-variable # pragma: no cover
                 raise RuntimeError(&#39;Error invoking git config --get remote.origin.url&#39;)
         return return_val
 
     @staticmethod
-    def _git_tag(git_tag_value): # pragma: no cover
+    def _git_tag(git_tag_value):  # pragma: no cover
         try:
             # NOTE:
             # this force is only needed locally in case of a re-reun of the same pipeline
@@ -348,19 +407,31 @@ class Git(StepImplementer):
             # making this an acceptable work around to the issue since on the off chance
             # actually orverwriting a tag with a different comment, the push will fail
             # because the tag will be attached to a different git hash.
-            sh.git.tag(git_tag_value, &#39;-f&#39;)
+            sh.git.tag(  # pylint: disable=no-member
+                git_tag_value,
+                &#39;-f&#39;,
+                _out=sys.stdout
+            )
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git tag &#39; + git_tag_value)
 
     @staticmethod
-    def _git_push(url=None): # pragma: no cover
+    def _git_push(url=None):  # pragma: no cover
         try:
             if url:
-                sh.git.push(url, &#39;--tag&#39;)
+                sh.git.push(
+                    url,
+                    &#39;--tag&#39;,
+                    _out=sys.stdout
+                )
             else:
-                sh.git.push(&#39;--tag&#39;)
+                sh.git.push(
+                    &#39;--tag&#39;,
+                    _out=sys.stdout
+                )
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git push&#39;)
+
 
 # register step implementer
 TSSCFactory.register_step_implementer(Git, True)</code></pre>
@@ -377,20 +448,13 @@ TSSCFactory.register_step_implementer(Git, True)</code></pre>
 <dl>
 <dt id="tssc.step_implementers.tag_source.git.Git"><code class="flex name class">
 <span>class <span class="ident">Git</span></span>
-<span>(</span><span>config, results_dir, results_file_name, work_dir_path)</span>
+<span>(</span><span>results_dir_path, results_file_name, work_dir_path, step_environment_config=None, step_config=None, global_config_defaults=None, global_environment_config_defaults=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>StepImplementer for the tag-source step for Git.</p>
 <p>This makes extensive use of the python sh library. This was a deliberate choice,
 as the gitpython library doesn't appear to easily support username/password auth
-for http and https git repos, and that is a desired use case.</p>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>If a required parameter is unspecified</dd>
-<dt><code>RuntimeError</code></dt>
-<dd>If git commands fail for any reason</dd>
-</dl></div>
+for http and https git repos, and that is a desired use case.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -402,64 +466,102 @@ for http and https git repos, and that is a desired use case.</p>
     This makes extensive use of the python sh library. This was a deliberate choice,
     as the gitpython library doesn&#39;t appear to easily support username/password auth
     for http and https git repos, and that is a desired use case.
-
-    Raises
-    ------
-    ValueError
-        If a required parameter is unspecified
-    RuntimeError
-        If git commands fail for any reason
     &#34;&#34;&#34;
 
-    def __init__(self, config, results_dir, results_file_name, work_dir_path):
-        super().__init__(config, results_dir, results_file_name, work_dir_path, DEFAULT_ARGS)
+    @staticmethod
+    def step_name():
+        &#34;&#34;&#34;
+        Getter for the TSSC Step name implemented by this step.
 
-    @classmethod
-    def step_name(cls):
+        Returns
+        -------
+        str
+            TSSC step name implemented by this step.
+        &#34;&#34;&#34;
         return DefaultSteps.TAG_SOURCE
 
-    def _validate_step_config(self, step_config):
+    @staticmethod
+    def step_implementer_config_defaults():
         &#34;&#34;&#34;
-        Function for implementers to override to do custom step config validation.
+        Getter for the StepImplementer&#39;s configuration defaults.
+
+        Notes
+        -----
+        These are the lowest precedence configuration values.
+
+        Returns
+        -------
+        dict
+            Default values to use for step configuration values.
+        &#34;&#34;&#34;
+        return DEFAULT_CONFIG
+
+    @staticmethod
+    def required_runtime_step_config_keys():
+        &#34;&#34;&#34;
+        Getter for step configuration keys that are required before running the step.
+
+        See Also
+        --------
+        _validate_runtime_step_config
+
+        Returns
+        -------
+        array_list
+            Array of configuration keys that are required before running the step.
+        &#34;&#34;&#34;
+        return []
+
+    def _validate_runtime_step_config(self, runtime_step_config):
+        &#34;&#34;&#34;
+        Validates the given `runtime_step_config` against the required step configuration keys.
 
         Parameters
         ----------
-        step_config : dict
-            Step configuration to validate.
+        runtime_step_config : dict
+            Step configuration to use when the StepImplementer runs the step with all of the
+            various static, runtime, defaults, and environment configuration munged together.
+
+        Raises
+        ------
+        AssertionError
+            If the given `runtime_step_config` is not valid with a message as to why.
         &#34;&#34;&#34;
-        print(step_config)
+        super()._validate_runtime_step_config(runtime_step_config) #pylint: disable=protected-access
 
-    @staticmethod
-    def _validate_runtime_step_config(runtime_step_config):
-        if not all(element in runtime_step_config for element in OPTIONAL_ARGS) \
-          and any(element in runtime_step_config for element in OPTIONAL_ARGS):
-            raise ValueError(&#39;Either username or password is not set. Neither &#39; \
-              &#39;or both must be set.&#39;)
-
-    def _get_tag(self):
-        tag = &#39;latest&#39;
-        if(self.get_step_results(&#39;generate-metadata&#39;) \
-          and self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)):
-            tag = self.get_step_results(&#39;generate-metadata&#39;).get(&#39;version&#39;)
-        else:
-            print(&#39;No version found in metadata. Using latest&#39;)
-        return tag
+        assert ( \
+            all(element in runtime_step_config for element in AUTHENTICATION_CONFIG) or \
+            not any(element in runtime_step_config for element in AUTHENTICATION_CONFIG) \
+        ), &#39;Either username or password is not set. Neither or both must be set.&#39;
 
     def _run_step(self, runtime_step_config):
+        &#34;&#34;&#34;
+        Runs the TSSC step implemented by this StepImplementer.
+
+        Parameters
+        ----------
+        runtime_step_config : dict
+            Step configuration to use when the StepImplementer runs the step with all of the
+            various static, runtime, defaults, and environment configuration munged together.
+
+        Returns
+        -------
+        dict
+            Results of running this step.
+        &#34;&#34;&#34;
         username = None
         password = None
 
-
-        self._validate_runtime_step_config(runtime_step_config)
-
-        if any(element in runtime_step_config for element in OPTIONAL_ARGS):
+        if any(element in runtime_step_config for element in AUTHENTICATION_CONFIG):
             if(runtime_step_config.get(&#39;username&#39;) \
               and runtime_step_config.get(&#39;password&#39;)):
                 username = runtime_step_config.get(&#39;username&#39;)
                 password = runtime_step_config.get(&#39;password&#39;)
             else:
-                raise ValueError(&#39;Both username and password must have &#39; \
-                  &#39;non-empty value in the runtime step configuration&#39;)
+                raise ValueError(
+                    &#39;Both username and password must have &#39; \
+                    &#39;non-empty value in the runtime step configuration&#39;
+                )
         else:
             print(&#39;No username/password found, assuming ssh&#39;)
         tag = self._get_tag()
@@ -469,20 +571,33 @@ for http and https git repos, and that is a desired use case.</p>
             if username and password:
                 self._git_push(&#39;http://&#39; + username + &#39;:&#39; + password + &#39;@&#39; + git_url[7:])
             else:
-                raise ValueError(&#39;For a http:// git url, you need to also provide &#39; \
-                  &#39;username/password pair&#39;)
+                raise ValueError(
+                    &#39;For a http:// git url, you need to also provide &#39; \
+                    &#39;username/password pair&#39;
+                )
         elif git_url.startswith(&#39;https://&#39;):
             if username and password:
                 self._git_push(&#39;https://&#39; + username + &#39;:&#39; + password + &#39;@&#39; + git_url[8:])
             else:
-                raise ValueError(&#39;For a https:// git url, you need to also provide &#39; \
-                  &#39;username/password pair&#39;)
+                raise ValueError(
+                    &#39;For a https:// git url, you need to also provide &#39; \
+                    &#39;username/password pair&#39;
+                )
         else:
             self._git_push(None)
         results = {
             &#39;tag&#39; : tag
         }
         return results
+
+    def _get_tag(self):
+        tag = &#39;latest&#39;
+        if(self.get_step_results(DefaultSteps.GENERATE_METADATA) \
+          and self.get_step_results(DefaultSteps.GENERATE_METADATA).get(&#39;version&#39;)):
+            tag = self.get_step_results(DefaultSteps.GENERATE_METADATA).get(&#39;version&#39;)
+        else:
+            print(&#39;No version found in metadata. Using latest&#39;)
+        return tag
 
     @staticmethod
     def _git_url(runtime_step_config):
@@ -493,13 +608,19 @@ for http and https git repos, and that is a desired use case.</p>
             try:
                 return_val = sh.git.config(
                     &#39;--get&#39;,
-                    &#39;remote.origin.url&#39;).stdout.decode(&#34;utf-8&#34;).rstrip()
+                    &#39;remote.origin.url&#39;,
+                    _out=sys.stdout,
+                    _tee=True,
+                    _encoding=&#39;UTF-8&#39;,
+                    _decode_errors=&#39;ignore&#39;
+                    ).rstrip()
+
             except sh.ErrorReturnCode:  # pylint: disable=undefined-variable # pragma: no cover
                 raise RuntimeError(&#39;Error invoking git config --get remote.origin.url&#39;)
         return return_val
 
     @staticmethod
-    def _git_tag(git_tag_value): # pragma: no cover
+    def _git_tag(git_tag_value):  # pragma: no cover
         try:
             # NOTE:
             # this force is only needed locally in case of a re-reun of the same pipeline
@@ -507,17 +628,28 @@ for http and https git repos, and that is a desired use case.</p>
             # making this an acceptable work around to the issue since on the off chance
             # actually orverwriting a tag with a different comment, the push will fail
             # because the tag will be attached to a different git hash.
-            sh.git.tag(git_tag_value, &#39;-f&#39;)
+            sh.git.tag(  # pylint: disable=no-member
+                git_tag_value,
+                &#39;-f&#39;,
+                _out=sys.stdout
+            )
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git tag &#39; + git_tag_value)
 
     @staticmethod
-    def _git_push(url=None): # pragma: no cover
+    def _git_push(url=None):  # pragma: no cover
         try:
             if url:
-                sh.git.push(url, &#39;--tag&#39;)
+                sh.git.push(
+                    url,
+                    &#39;--tag&#39;,
+                    _out=sys.stdout
+                )
             else:
-                sh.git.push(&#39;--tag&#39;)
+                sh.git.push(
+                    &#39;--tag&#39;,
+                    _out=sys.stdout
+                )
         except sh.ErrorReturnCode:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git push&#39;)</code></pre>
 </details>
@@ -533,9 +665,14 @@ for http and https git repos, and that is a desired use case.</p>
 <li><code><a title="tssc.step_implementer.StepImplementer.current_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.current_results">current_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.current_step_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.current_step_results">current_step_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.get_step_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.get_step_results">get_step_results</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.global_config_defaults" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.global_config_defaults">global_config_defaults</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.global_environment_config_defaults" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.global_environment_config_defaults">global_environment_config_defaults</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.required_runtime_step_config_keys" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.required_runtime_step_config_keys">required_runtime_step_config_keys</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.results_file_path" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.results_file_path">results_file_path</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.run_step" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.run_step">run_step</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_config" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_config">step_config</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.step_environment_config" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_environment_config">step_environment_config</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.step_implementer_config_defaults" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_implementer_config_defaults">step_implementer_config_defaults</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_name" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_name">step_name</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.write_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_results">write_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.write_temp_file" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_temp_file">write_temp_file</a></code></li>
