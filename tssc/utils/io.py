@@ -126,9 +126,10 @@ class TextIOSelectiveObfuscator(io.TextIOBase):
             The target patterns to be obfuscated when writing to this stream.
         """
         if isinstance(targets, list):
-            self.__obfuscation_targets += targets
+            for target in targets:
+                self.__obfuscation_targets.append(re.escape(target))
         else:
-            self.__obfuscation_targets.append(targets)
+            self.__obfuscation_targets.append(re.escape(targets))
 
     def __obfuscator(self, match):
         """Given a regex match returns a corresponding obfuscated string.

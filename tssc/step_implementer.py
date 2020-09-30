@@ -2,17 +2,20 @@
 Abstract class and helper constants for StepImplementer.
 """
 
-from abc import ABC, abstractmethod
-from contextlib import redirect_stdout, redirect_stderr
+import json
 import os
-from pathlib import Path
-import pprint
-import textwrap
 import sys
+import textwrap
+from abc import ABC, abstractmethod
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
+
 import yaml
-from tssc.exceptions import TSSCException
+
 from tssc.config.config_value import ConfigValue
+from tssc.exceptions import TSSCException
 from tssc.utils.io import TextIOIndenter
+
 
 class DefaultSteps:  # pylint: disable=too-few-public-methods
     """
@@ -34,7 +37,8 @@ class DefaultSteps:  # pylint: disable=too-few-public-methods
     UAT = 'uat'
     RUNTIME_VULNERABILITY_SCAN = 'runtime-vulnerability-scan'
     CANARY_TEST = 'canary-test'
-    PUBLISH_WROKFLOW_RESULTS = 'publish-workflow-results'
+    PUBLISH_WORKFLOW_RESULTS = 'publish-workflow-results'
+    SIGN_CONTAINER_IMAGE = 'sign-container-image'
 
 
 class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
@@ -577,6 +581,13 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 
         return os.path.abspath(step_path)
 
+    def create_working_dir_sub_dir(self, sub_dir_relative_path):
+        working_folder = self.create_working_folder()
+
+        sub_dir_path = os.path.join(working_folder, sub_dir_relative_path)
+        os.makedirs(sub_dir_path, exist_ok=True)
+
+        return sub_dir_path
 
     def write_working_file(self, filename, contents=None):
         """
@@ -653,13 +664,12 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         indent : int
             Amount to indent the title by and then the content by this +1
         """
-        printer = pprint.PrettyPrinter()
         StepImplementer.__print_indented(
             text=title,
             indent=indent
         )
         StepImplementer.__print_indented(
-            text=printer.pformat(data),
+            text=json.dumps(data, indent=4),
             indent=indent+1
         )
         print()
