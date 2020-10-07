@@ -27,16 +27,23 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;
-Abstract class and helper constants for StepImplementer.
+<pre><code class="python">&#34;&#34;&#34;Abstract class and helper constants for StepImplementer.
 &#34;&#34;&#34;
 
-from abc import ABC, abstractmethod
+import json
 import os
-import pprint
+import sys
+import textwrap
+from abc import ABC, abstractmethod
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
+
 import yaml
-from tabulate import tabulate
-from .exceptions import TSSCException
+
+from tssc.config.config_value import ConfigValue
+from tssc.exceptions import TSSCException
+from tssc.utils.io import TextIOIndenter
+
 
 class DefaultSteps:  # pylint: disable=too-few-public-methods
     &#34;&#34;&#34;
@@ -58,10 +65,12 @@ class DefaultSteps:  # pylint: disable=too-few-public-methods
     UAT = &#39;uat&#39;
     RUNTIME_VULNERABILITY_SCAN = &#39;runtime-vulnerability-scan&#39;
     CANARY_TEST = &#39;canary-test&#39;
-    PUBLISH_WROKFLOW_RESULTS = &#39;publish-workflow-results&#39;
+    PUBLISH_WORKFLOW_RESULTS = &#39;publish-workflow-results&#39;
+    SIGN_CONTAINER_IMAGE = &#39;sign-container-image&#39;
 
 
 class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
     &#34;&#34;&#34;
     Abstract representation of a TSSC step implementer.
 
@@ -75,13 +84,13 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         Path to the directory to write step working files to
     step_environment_config : dict, optional
         Step configuration specific to the current environment.
-    config : TSSCSubStepConfig
+    config : SubStepConfig
         Configuration for this step.
     environment : str
         Environment name to execute this step against
 
     Attributes
-    __config : TSSCSubStepConfig
+    __config : SubStepConfig
     __environment : str
     &#34;&#34;&#34;
 
@@ -111,7 +120,7 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         &#34;&#34;&#34;
         Returns
         -------
-        TSSCSubStepConfig
+        SubStepConfig
             Configuration for this step.
         &#34;&#34;&#34;
         return self.__config
@@ -201,14 +210,25 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 
     @property
     def step_name(self):
-        &#34;&#34;&#34;
-        Getter for the TSSC Step name implemented by this step.
+        &#34;&#34;&#34;Getter for the Step name implemented by this step.
+
         Returns
         -------
         str
-            TSSC step name implemented by this step.
+            Step name implemented by this step.
         &#34;&#34;&#34;
         return self.config.step_name
+
+    @property
+    def sub_step_name(self):
+        &#34;&#34;&#34;Getter for the Sub Step name implemented by this step.
+
+        Returns
+        -------
+        str
+            Sub step name implemented by this step.
+        &#34;&#34;&#34;
+        return self.config.sub_step_name
 
     @staticmethod
     @abstractmethod
@@ -275,55 +295,87 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
                 missing_required_config_keys.append(required_config_key)
 
         assert (not missing_required_config_keys), \
-            &#34;The runtime step configuration ({runtime_step_config}) is missing the required&#34;.format(
-                runtime_step_config=runtime_step_config,) + \
-            &#34; configuration keys ({missing_required_config_keys})&#34;.format(
-                missing_required_config_keys=missing_required_config_keys
-            )
+            &#34;The runtime step configuration (&#34; + \
+            f&#34;{ConfigValue.convert_leaves_to_values(runtime_step_config)}) is missing &#34; + \
+            f&#34;the required configuration keys ({missing_required_config_keys})&#34;
 
     def run_step(self):
         &#34;&#34;&#34;
         Wrapper for running the implemented step.
         &#34;&#34;&#34;
 
-        StepImplementer.__print_section_title(f&#34;TSSC Step Start - {self.step_name}&#34;)
+        StepImplementer.__print_section_title(
+            f&#34;Step Start - {self.step_name} - {self.sub_step_name}&#34;
+        )
 
-        # print information about the static step configuration
+        # print information about theconfiguration
+        StepImplementer.__print_section_title(
+            f&#34;Configuration - {self.step_name} - {self.sub_step_name}&#34;,
+            div_char=&#34;-&#34;,
+            indent=1
+        )
         StepImplementer.__print_data(
             &#34;Step Implementer Configuration Defaults&#34;,
-            self.step_implementer_config_defaults())
+            ConfigValue.convert_leaves_to_values(self.step_implementer_config_defaults())
+        )
         StepImplementer.__print_data(
             &#34;Global Configuration Defaults&#34;,
-            self.global_config_defaults)
+            ConfigValue.convert_leaves_to_values(self.global_config_defaults)
+        )
         StepImplementer.__print_data(
             &#34;Global Environment Configuration Defaults&#34;,
-            self.global_environment_config_defaults)
+            ConfigValue.convert_leaves_to_values(self.global_environment_config_defaults)
+        )
         StepImplementer.__print_data(
             &#34;Step Configuration&#34;,
-            self.step_config)
+            ConfigValue.convert_leaves_to_values(self.step_config)
+        )
         StepImplementer.__print_data(
             &#34;Step Environment Configuration&#34;,
-            self.step_environment_config)
+            ConfigValue.convert_leaves_to_values(self.step_environment_config)
+        )
         StepImplementer.__print_data(
             &#34;Step Configuration Runtime Overrides&#34;,
-            self.step_config_overrides)
+            ConfigValue.convert_leaves_to_values(self.step_config_overrides)
+        )
 
         # create the munged runtime step configuration and print
         copy_of_runtime_step_config = self.get_copy_of_runtime_step_config()
         StepImplementer.__print_data(
             &#34;Runtime Step Configuration&#34;,
-            copy_of_runtime_step_config)
+            ConfigValue.convert_leaves_to_values(copy_of_runtime_step_config)
+        )
 
-        # validate the runtime step configuration, run the step, and save the results
+        # validate the runtime step configuration
+        StepImplementer.__print_section_title(
+            f&#34;Standard Out - {self.step_name} - {self.sub_step_name}&#34;,
+            div_char=&#34;-&#34;,
+            indent=1
+        )
         self._validate_runtime_step_config(copy_of_runtime_step_config)
-        results = self._run_step()
-        self.write_results(results)
+
+        # run the step and save the results
+        indented_stdout = TextIOIndenter(
+            parent_stream=sys.stdout,
+            indent_level=2
+        )
+        indented_stderr = TextIOIndenter(
+            parent_stream=sys.stderr,
+            indent_level=2
+        )
+        with redirect_stdout(indented_stdout), redirect_stderr(indented_stderr):
+            results = self._run_step()
+            self.write_results(results)
 
         # print the step run results
-        StepImplementer.__print_section_title(f&#34;TSSC Step Results - {self.step_name}&#34;)
+        StepImplementer.__print_section_title(
+            f&#34;Results - {self.step_name} - {self.sub_step_name}&#34;,
+            div_char=&#34;-&#34;,
+            indent=1
+        )
         StepImplementer.__print_data(&#39;Results File Path&#39;, self.results_file_path)
-        StepImplementer.__print_data(&#39;Step Results&#39;, results)
-        StepImplementer.__print_section_title(f&#34;TSSC Step End - {self.step_name}&#34;)
+        StepImplementer.__print_data(&#39;Results&#39;, results)
+        StepImplementer.__print_section_title(f&#34;Step End - {self.step_name} - {self.sub_step_name}&#34;)
 
     def write_results(self, results):
         &#34;&#34;&#34;
@@ -553,14 +605,14 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         &#34;&#34;&#34;
         return self.get_step_results(self.step_name)
 
-    def write_temp_file(self, filename, contents):
+    def create_working_folder(self):
         &#34;&#34;&#34;
-        Write content to filename in working directory
+        If it does not exist, create working folder
 
         Returns
         -------
         str
-            return a string to the absolute file path
+            return a string to the absolute path
         &#34;&#34;&#34;
         if not os.path.exists(self.__work_dir_path):
             os.makedirs(self.__work_dir_path)
@@ -568,13 +620,63 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         if not os.path.exists(step_path):
             os.makedirs(step_path)
 
-        file_path = os.path.join(step_path, filename)
-        with open(file_path, &#39;wb&#39;) as file:
-            file.write(contents)
+        return os.path.abspath(step_path)
+
+    def create_working_dir_sub_dir(self, sub_dir_relative_path):
+        &#34;&#34;&#34;Creates a sub directory in the working directory.
+
+        Parameters
+        ----------
+        sub_dir_relative_path : str
+            Sub directory path to create under the working directory.
+
+        Returns
+        -------
+        str
+            Absolute path to the newly created sub directory.
+        &#34;&#34;&#34;
+        working_folder = self.create_working_folder()
+
+        sub_dir_path = os.path.join(working_folder, sub_dir_relative_path)
+        os.makedirs(sub_dir_path, exist_ok=True)
+
+        return sub_dir_path
+
+    def write_working_file(self, filename, contents=None):
+        &#34;&#34;&#34;
+        Write content to filename in working directory
+
+        Parameters
+        ----------
+        filename : str
+            Relative path (to working dir), including file name, to create.
+        contents : str, optional
+            Contents to write to the file
+
+        Returns
+        -------
+        str
+            return a string to the absolute file path
+        &#34;&#34;&#34;
+        working_folder = self.create_working_folder()
+
+        file_path = os.path.join(working_folder, filename)
+
+        # if given contents write it to file
+        # else just touch empty file
+        #
+        # NOTE: in either case auto create any missing parent directories
+        if contents is not None:
+            with open(file_path, &#39;wb&#39;) as file:
+                file.write(contents)
+        else:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            Path(file_path).touch()
+
         return file_path
 
-    @classmethod
-    def __print_section_title(cls, title):
+    @staticmethod
+    def __print_section_title(title, div_char=&#34;=&#34;, indent=0):
         &#34;&#34;&#34;
         Utility function for pretty printing section title.
 
@@ -585,16 +687,26 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         &#34;&#34;&#34;
         print()
         print()
-        print(tabulate(
-            [[]],
-            [title.center(StepImplementer.__TITLE_LENGTH)],
-            tablefmt=&#34;pretty&#34;
-        ))
+        StepImplementer.__print_indented(
+            text=div_char * StepImplementer.__TITLE_LENGTH,
+            indent=indent
+        )
+        StepImplementer.__print_indented(
+            text=title.center(StepImplementer.__TITLE_LENGTH),
+            indent=indent
+        )
+        StepImplementer.__print_indented(
+            text=div_char * StepImplementer.__TITLE_LENGTH,
+            indent=indent
+        )
 
-    @classmethod
-    def __print_data(cls, title, data):
-        &#34;&#34;&#34;
-        Utility function for pretty printing data.
+    @staticmethod
+    def __print_data(title, data, indent=2):
+        &#34;&#34;&#34;Utility function for pretty printing data.
+
+        Notes
+        -----
+        Indent levels are each are 4 spaces wide.
 
         Parameters
         ----------
@@ -602,13 +714,37 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
             Title of the data to print.
         data
             Data to print
+        indent : int
+            Amount to indent the title by and then the content by this +1
         &#34;&#34;&#34;
-        printer = pprint.PrettyPrinter()
-        print(tabulate(
-            [[printer.pformat(data)]],
-            [title.ljust(StepImplementer.__TITLE_LENGTH)],
-            tablefmt=&#34;pretty&#34;,
-            colalign=(&#34;left&#34;,)
+        StepImplementer.__print_indented(
+            text=title,
+            indent=indent
+        )
+        StepImplementer.__print_indented(
+            text=json.dumps(data, indent=4),
+            indent=indent+1
+        )
+        print()
+
+    @staticmethod
+    def __print_indented(text, indent=0):
+        &#34;&#34;&#34;Prints the given text indented by a given indent level.
+
+        Notes
+        -----
+        Indent levels are each are 4 spaces wide.
+
+        Parameters
+        ----------
+        text : str
+            Text to print indented.
+        indent : indent
+            amount to indent the given text by before printing.
+        &#34;&#34;&#34;
+        print(textwrap.indent(
+            text=text,
+            prefix=&#34; &#34; * (4 * indent)
         ))</code></pre>
 </details>
 </section>
@@ -650,7 +786,8 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
     UAT = &#39;uat&#39;
     RUNTIME_VULNERABILITY_SCAN = &#39;runtime-vulnerability-scan&#39;
     CANARY_TEST = &#39;canary-test&#39;
-    PUBLISH_WROKFLOW_RESULTS = &#39;publish-workflow-results&#39;</code></pre>
+    PUBLISH_WORKFLOW_RESULTS = &#39;publish-workflow-results&#39;
+    SIGN_CONTAINER_IMAGE = &#39;sign-container-image&#39;</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -690,7 +827,7 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="tssc.step_implementer.DefaultSteps.PUBLISH_WROKFLOW_RESULTS"><code class="name">var <span class="ident">PUBLISH_WROKFLOW_RESULTS</span></code></dt>
+<dt id="tssc.step_implementer.DefaultSteps.PUBLISH_WORKFLOW_RESULTS"><code class="name">var <span class="ident">PUBLISH_WORKFLOW_RESULTS</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -703,6 +840,10 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 <div class="desc"></div>
 </dd>
 <dt id="tssc.step_implementer.DefaultSteps.RUNTIME_VULNERABILITY_SCAN"><code class="name">var <span class="ident">RUNTIME_VULNERABILITY_SCAN</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="tssc.step_implementer.DefaultSteps.SIGN_CONTAINER_IMAGE"><code class="name">var <span class="ident">SIGN_CONTAINER_IMAGE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -740,13 +881,13 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 <dd>Path to the directory to write step working files to</dd>
 <dt><strong><code>step_environment_config</code></strong> :&ensp;<code>dict</code>, optional</dt>
 <dd>Step configuration specific to the current environment.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code>TSSCSubStepConfig</code></dt>
+<dt><strong><code>config</code></strong> :&ensp;<code>SubStepConfig</code></dt>
 <dd>Configuration for this step.</dd>
 <dt><strong><code>environment</code></strong> :&ensp;<code>str</code></dt>
 <dd>Environment name to execute this step against</dd>
 <dt><strong><code>Attributes</code></strong></dt>
 <dd>&nbsp;</dd>
-<dt><strong><code>__config</code></strong> :&ensp;<code>TSSCSubStepConfig</code></dt>
+<dt><strong><code>__config</code></strong> :&ensp;<code>SubStepConfig</code></dt>
 <dd>&nbsp;</dd>
 <dt><strong><code>__environment</code></strong> :&ensp;<code>str</code></dt>
 <dd>&nbsp;</dd>
@@ -756,6 +897,7 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
     &#34;&#34;&#34;
     Abstract representation of a TSSC step implementer.
 
@@ -769,13 +911,13 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         Path to the directory to write step working files to
     step_environment_config : dict, optional
         Step configuration specific to the current environment.
-    config : TSSCSubStepConfig
+    config : SubStepConfig
         Configuration for this step.
     environment : str
         Environment name to execute this step against
 
     Attributes
-    __config : TSSCSubStepConfig
+    __config : SubStepConfig
     __environment : str
     &#34;&#34;&#34;
 
@@ -805,7 +947,7 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         &#34;&#34;&#34;
         Returns
         -------
-        TSSCSubStepConfig
+        SubStepConfig
             Configuration for this step.
         &#34;&#34;&#34;
         return self.__config
@@ -895,14 +1037,25 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 
     @property
     def step_name(self):
-        &#34;&#34;&#34;
-        Getter for the TSSC Step name implemented by this step.
+        &#34;&#34;&#34;Getter for the Step name implemented by this step.
+
         Returns
         -------
         str
-            TSSC step name implemented by this step.
+            Step name implemented by this step.
         &#34;&#34;&#34;
         return self.config.step_name
+
+    @property
+    def sub_step_name(self):
+        &#34;&#34;&#34;Getter for the Sub Step name implemented by this step.
+
+        Returns
+        -------
+        str
+            Sub step name implemented by this step.
+        &#34;&#34;&#34;
+        return self.config.sub_step_name
 
     @staticmethod
     @abstractmethod
@@ -969,55 +1122,87 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
                 missing_required_config_keys.append(required_config_key)
 
         assert (not missing_required_config_keys), \
-            &#34;The runtime step configuration ({runtime_step_config}) is missing the required&#34;.format(
-                runtime_step_config=runtime_step_config,) + \
-            &#34; configuration keys ({missing_required_config_keys})&#34;.format(
-                missing_required_config_keys=missing_required_config_keys
-            )
+            &#34;The runtime step configuration (&#34; + \
+            f&#34;{ConfigValue.convert_leaves_to_values(runtime_step_config)}) is missing &#34; + \
+            f&#34;the required configuration keys ({missing_required_config_keys})&#34;
 
     def run_step(self):
         &#34;&#34;&#34;
         Wrapper for running the implemented step.
         &#34;&#34;&#34;
 
-        StepImplementer.__print_section_title(f&#34;TSSC Step Start - {self.step_name}&#34;)
+        StepImplementer.__print_section_title(
+            f&#34;Step Start - {self.step_name} - {self.sub_step_name}&#34;
+        )
 
-        # print information about the static step configuration
+        # print information about theconfiguration
+        StepImplementer.__print_section_title(
+            f&#34;Configuration - {self.step_name} - {self.sub_step_name}&#34;,
+            div_char=&#34;-&#34;,
+            indent=1
+        )
         StepImplementer.__print_data(
             &#34;Step Implementer Configuration Defaults&#34;,
-            self.step_implementer_config_defaults())
+            ConfigValue.convert_leaves_to_values(self.step_implementer_config_defaults())
+        )
         StepImplementer.__print_data(
             &#34;Global Configuration Defaults&#34;,
-            self.global_config_defaults)
+            ConfigValue.convert_leaves_to_values(self.global_config_defaults)
+        )
         StepImplementer.__print_data(
             &#34;Global Environment Configuration Defaults&#34;,
-            self.global_environment_config_defaults)
+            ConfigValue.convert_leaves_to_values(self.global_environment_config_defaults)
+        )
         StepImplementer.__print_data(
             &#34;Step Configuration&#34;,
-            self.step_config)
+            ConfigValue.convert_leaves_to_values(self.step_config)
+        )
         StepImplementer.__print_data(
             &#34;Step Environment Configuration&#34;,
-            self.step_environment_config)
+            ConfigValue.convert_leaves_to_values(self.step_environment_config)
+        )
         StepImplementer.__print_data(
             &#34;Step Configuration Runtime Overrides&#34;,
-            self.step_config_overrides)
+            ConfigValue.convert_leaves_to_values(self.step_config_overrides)
+        )
 
         # create the munged runtime step configuration and print
         copy_of_runtime_step_config = self.get_copy_of_runtime_step_config()
         StepImplementer.__print_data(
             &#34;Runtime Step Configuration&#34;,
-            copy_of_runtime_step_config)
+            ConfigValue.convert_leaves_to_values(copy_of_runtime_step_config)
+        )
 
-        # validate the runtime step configuration, run the step, and save the results
+        # validate the runtime step configuration
+        StepImplementer.__print_section_title(
+            f&#34;Standard Out - {self.step_name} - {self.sub_step_name}&#34;,
+            div_char=&#34;-&#34;,
+            indent=1
+        )
         self._validate_runtime_step_config(copy_of_runtime_step_config)
-        results = self._run_step()
-        self.write_results(results)
+
+        # run the step and save the results
+        indented_stdout = TextIOIndenter(
+            parent_stream=sys.stdout,
+            indent_level=2
+        )
+        indented_stderr = TextIOIndenter(
+            parent_stream=sys.stderr,
+            indent_level=2
+        )
+        with redirect_stdout(indented_stdout), redirect_stderr(indented_stderr):
+            results = self._run_step()
+            self.write_results(results)
 
         # print the step run results
-        StepImplementer.__print_section_title(f&#34;TSSC Step Results - {self.step_name}&#34;)
+        StepImplementer.__print_section_title(
+            f&#34;Results - {self.step_name} - {self.sub_step_name}&#34;,
+            div_char=&#34;-&#34;,
+            indent=1
+        )
         StepImplementer.__print_data(&#39;Results File Path&#39;, self.results_file_path)
-        StepImplementer.__print_data(&#39;Step Results&#39;, results)
-        StepImplementer.__print_section_title(f&#34;TSSC Step End - {self.step_name}&#34;)
+        StepImplementer.__print_data(&#39;Results&#39;, results)
+        StepImplementer.__print_section_title(f&#34;Step End - {self.step_name} - {self.sub_step_name}&#34;)
 
     def write_results(self, results):
         &#34;&#34;&#34;
@@ -1247,14 +1432,14 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         &#34;&#34;&#34;
         return self.get_step_results(self.step_name)
 
-    def write_temp_file(self, filename, contents):
+    def create_working_folder(self):
         &#34;&#34;&#34;
-        Write content to filename in working directory
+        If it does not exist, create working folder
 
         Returns
         -------
         str
-            return a string to the absolute file path
+            return a string to the absolute path
         &#34;&#34;&#34;
         if not os.path.exists(self.__work_dir_path):
             os.makedirs(self.__work_dir_path)
@@ -1262,13 +1447,63 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         if not os.path.exists(step_path):
             os.makedirs(step_path)
 
-        file_path = os.path.join(step_path, filename)
-        with open(file_path, &#39;wb&#39;) as file:
-            file.write(contents)
+        return os.path.abspath(step_path)
+
+    def create_working_dir_sub_dir(self, sub_dir_relative_path):
+        &#34;&#34;&#34;Creates a sub directory in the working directory.
+
+        Parameters
+        ----------
+        sub_dir_relative_path : str
+            Sub directory path to create under the working directory.
+
+        Returns
+        -------
+        str
+            Absolute path to the newly created sub directory.
+        &#34;&#34;&#34;
+        working_folder = self.create_working_folder()
+
+        sub_dir_path = os.path.join(working_folder, sub_dir_relative_path)
+        os.makedirs(sub_dir_path, exist_ok=True)
+
+        return sub_dir_path
+
+    def write_working_file(self, filename, contents=None):
+        &#34;&#34;&#34;
+        Write content to filename in working directory
+
+        Parameters
+        ----------
+        filename : str
+            Relative path (to working dir), including file name, to create.
+        contents : str, optional
+            Contents to write to the file
+
+        Returns
+        -------
+        str
+            return a string to the absolute file path
+        &#34;&#34;&#34;
+        working_folder = self.create_working_folder()
+
+        file_path = os.path.join(working_folder, filename)
+
+        # if given contents write it to file
+        # else just touch empty file
+        #
+        # NOTE: in either case auto create any missing parent directories
+        if contents is not None:
+            with open(file_path, &#39;wb&#39;) as file:
+                file.write(contents)
+        else:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            Path(file_path).touch()
+
         return file_path
 
-    @classmethod
-    def __print_section_title(cls, title):
+    @staticmethod
+    def __print_section_title(title, div_char=&#34;=&#34;, indent=0):
         &#34;&#34;&#34;
         Utility function for pretty printing section title.
 
@@ -1279,16 +1514,26 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
         &#34;&#34;&#34;
         print()
         print()
-        print(tabulate(
-            [[]],
-            [title.center(StepImplementer.__TITLE_LENGTH)],
-            tablefmt=&#34;pretty&#34;
-        ))
+        StepImplementer.__print_indented(
+            text=div_char * StepImplementer.__TITLE_LENGTH,
+            indent=indent
+        )
+        StepImplementer.__print_indented(
+            text=title.center(StepImplementer.__TITLE_LENGTH),
+            indent=indent
+        )
+        StepImplementer.__print_indented(
+            text=div_char * StepImplementer.__TITLE_LENGTH,
+            indent=indent
+        )
 
-    @classmethod
-    def __print_data(cls, title, data):
-        &#34;&#34;&#34;
-        Utility function for pretty printing data.
+    @staticmethod
+    def __print_data(title, data, indent=2):
+        &#34;&#34;&#34;Utility function for pretty printing data.
+
+        Notes
+        -----
+        Indent levels are each are 4 spaces wide.
 
         Parameters
         ----------
@@ -1296,13 +1541,37 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
             Title of the data to print.
         data
             Data to print
+        indent : int
+            Amount to indent the title by and then the content by this +1
         &#34;&#34;&#34;
-        printer = pprint.PrettyPrinter()
-        print(tabulate(
-            [[printer.pformat(data)]],
-            [title.ljust(StepImplementer.__TITLE_LENGTH)],
-            tablefmt=&#34;pretty&#34;,
-            colalign=(&#34;left&#34;,)
+        StepImplementer.__print_indented(
+            text=title,
+            indent=indent
+        )
+        StepImplementer.__print_indented(
+            text=json.dumps(data, indent=4),
+            indent=indent+1
+        )
+        print()
+
+    @staticmethod
+    def __print_indented(text, indent=0):
+        &#34;&#34;&#34;Prints the given text indented by a given indent level.
+
+        Notes
+        -----
+        Indent levels are each are 4 spaces wide.
+
+        Parameters
+        ----------
+        text : str
+            Text to print indented.
+        indent : indent
+            amount to indent the given text by before printing.
+        &#34;&#34;&#34;
+        print(textwrap.indent(
+            text=text,
+            prefix=&#34; &#34; * (4 * indent)
         ))</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1325,10 +1594,14 @@ class StepImplementer(ABC): # pylint: disable=too-many-instance-attributes
 <li><a title="tssc.step_implementers.push_artifacts.maven.Maven" href="step_implementers/push_artifacts/maven.html#tssc.step_implementers.push_artifacts.maven.Maven">Maven</a></li>
 <li><a title="tssc.step_implementers.push_artifacts.npm.NPM" href="step_implementers/push_artifacts/npm.html#tssc.step_implementers.push_artifacts.npm.NPM">NPM</a></li>
 <li><a title="tssc.step_implementers.push_container_image.skopeo.Skopeo" href="step_implementers/push_container_image/skopeo.html#tssc.step_implementers.push_container_image.skopeo.Skopeo">Skopeo</a></li>
+<li><a title="tssc.step_implementers.sign_container_image.curl_push.CurlPush" href="step_implementers/sign_container_image/curl_push.html#tssc.step_implementers.sign_container_image.curl_push.CurlPush">CurlPush</a></li>
+<li><a title="tssc.step_implementers.sign_container_image.podman_sign.PodmanSign" href="step_implementers/sign_container_image/podman_sign.html#tssc.step_implementers.sign_container_image.podman_sign.PodmanSign">PodmanSign</a></li>
 <li><a title="tssc.step_implementers.static_code_analysis.sonarqube.SonarQube" href="step_implementers/static_code_analysis/sonarqube.html#tssc.step_implementers.static_code_analysis.sonarqube.SonarQube">SonarQube</a></li>
 <li><a title="tssc.step_implementers.tag_source.git.Git" href="step_implementers/tag_source/git.html#tssc.step_implementers.tag_source.git.Git">Git</a></li>
-<li><a title="tssc.step_implementers.uat.cucumber.Cucumber" href="step_implementers/uat/cucumber.html#tssc.step_implementers.uat.cucumber.Cucumber">Cucumber</a></li>
+<li><a title="tssc.step_implementers.uat.maven.Maven" href="step_implementers/uat/maven.html#tssc.step_implementers.uat.maven.Maven">Maven</a></li>
 <li><a title="tssc.step_implementers.unit_test.maven.Maven" href="step_implementers/unit_test/maven.html#tssc.step_implementers.unit_test.maven.Maven">Maven</a></li>
+<li><a title="tssc.step_implementers.validate_environment_configuration.configlint.Configlint" href="step_implementers/validate_environment_configuration/configlint.html#tssc.step_implementers.validate_environment_configuration.configlint.Configlint">Configlint</a></li>
+<li><a title="tssc.step_implementers.validate_environment_configuration.configlint_from_argocd.ConfiglintFromArgocd" href="step_implementers/validate_environment_configuration/configlint_from_argocd.html#tssc.step_implementers.validate_environment_configuration.configlint_from_argocd.ConfiglintFromArgocd">ConfiglintFromArgocd</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
@@ -1405,7 +1678,7 @@ def step_implementer_config_defaults():
 <dd>
 <div class="desc"><h2 id="returns">Returns</h2>
 <dl>
-<dt><code>TSSCSubStepConfig</code></dt>
+<dt><code>SubStepConfig</code></dt>
 <dd>Configuration for this step.</dd>
 </dl></div>
 <details class="source">
@@ -1417,7 +1690,7 @@ def config(self):
     &#34;&#34;&#34;
     Returns
     -------
-    TSSCSubStepConfig
+    SubStepConfig
         Configuration for this step.
     &#34;&#34;&#34;
     return self.__config</code></pre>
@@ -1593,12 +1866,11 @@ def step_environment_config(self):
 </dd>
 <dt id="tssc.step_implementer.StepImplementer.step_name"><code class="name">var <span class="ident">step_name</span></code></dt>
 <dd>
-<div class="desc"><p>Getter for the TSSC Step name implemented by this step.
-Returns</p>
-<hr>
+<div class="desc"><p>Getter for the Step name implemented by this step.</p>
+<h2 id="returns">Returns</h2>
 <dl>
 <dt><code>str</code></dt>
-<dd>TSSC step name implemented by this step.</dd>
+<dd>Step name implemented by this step.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1606,19 +1878,115 @@ Returns</p>
 </summary>
 <pre><code class="python">@property
 def step_name(self):
-    &#34;&#34;&#34;
-    Getter for the TSSC Step name implemented by this step.
+    &#34;&#34;&#34;Getter for the Step name implemented by this step.
+
     Returns
     -------
     str
-        TSSC step name implemented by this step.
+        Step name implemented by this step.
     &#34;&#34;&#34;
     return self.config.step_name</code></pre>
+</details>
+</dd>
+<dt id="tssc.step_implementer.StepImplementer.sub_step_name"><code class="name">var <span class="ident">sub_step_name</span></code></dt>
+<dd>
+<div class="desc"><p>Getter for the Sub Step name implemented by this step.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Sub step name implemented by this step.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sub_step_name(self):
+    &#34;&#34;&#34;Getter for the Sub Step name implemented by this step.
+
+    Returns
+    -------
+    str
+        Sub step name implemented by this step.
+    &#34;&#34;&#34;
+    return self.config.sub_step_name</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="tssc.step_implementer.StepImplementer.create_working_dir_sub_dir"><code class="name flex">
+<span>def <span class="ident">create_working_dir_sub_dir</span></span>(<span>self, sub_dir_relative_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a sub directory in the working directory.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sub_dir_relative_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Sub directory path to create under the working directory.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>Absolute path to the newly created sub directory.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_working_dir_sub_dir(self, sub_dir_relative_path):
+    &#34;&#34;&#34;Creates a sub directory in the working directory.
+
+    Parameters
+    ----------
+    sub_dir_relative_path : str
+        Sub directory path to create under the working directory.
+
+    Returns
+    -------
+    str
+        Absolute path to the newly created sub directory.
+    &#34;&#34;&#34;
+    working_folder = self.create_working_folder()
+
+    sub_dir_path = os.path.join(working_folder, sub_dir_relative_path)
+    os.makedirs(sub_dir_path, exist_ok=True)
+
+    return sub_dir_path</code></pre>
+</details>
+</dd>
+<dt id="tssc.step_implementer.StepImplementer.create_working_folder"><code class="name flex">
+<span>def <span class="ident">create_working_folder</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>If it does not exist, create working folder</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>str</code></dt>
+<dd>return a string to the absolute path</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_working_folder(self):
+    &#34;&#34;&#34;
+    If it does not exist, create working folder
+
+    Returns
+    -------
+    str
+        return a string to the absolute path
+    &#34;&#34;&#34;
+    if not os.path.exists(self.__work_dir_path):
+        os.makedirs(self.__work_dir_path)
+    step_path = os.path.join(self.__work_dir_path, self.step_name)
+    if not os.path.exists(step_path):
+        os.makedirs(step_path)
+
+    return os.path.abspath(step_path)</code></pre>
+</details>
+</dd>
 <dt id="tssc.step_implementer.StepImplementer.current_results"><code class="name flex">
 <span>def <span class="ident">current_results</span></span>(<span>self)</span>
 </code></dt>
@@ -1952,44 +2320,78 @@ False otherwise.</dd>
     Wrapper for running the implemented step.
     &#34;&#34;&#34;
 
-    StepImplementer.__print_section_title(f&#34;TSSC Step Start - {self.step_name}&#34;)
+    StepImplementer.__print_section_title(
+        f&#34;Step Start - {self.step_name} - {self.sub_step_name}&#34;
+    )
 
-    # print information about the static step configuration
+    # print information about theconfiguration
+    StepImplementer.__print_section_title(
+        f&#34;Configuration - {self.step_name} - {self.sub_step_name}&#34;,
+        div_char=&#34;-&#34;,
+        indent=1
+    )
     StepImplementer.__print_data(
         &#34;Step Implementer Configuration Defaults&#34;,
-        self.step_implementer_config_defaults())
+        ConfigValue.convert_leaves_to_values(self.step_implementer_config_defaults())
+    )
     StepImplementer.__print_data(
         &#34;Global Configuration Defaults&#34;,
-        self.global_config_defaults)
+        ConfigValue.convert_leaves_to_values(self.global_config_defaults)
+    )
     StepImplementer.__print_data(
         &#34;Global Environment Configuration Defaults&#34;,
-        self.global_environment_config_defaults)
+        ConfigValue.convert_leaves_to_values(self.global_environment_config_defaults)
+    )
     StepImplementer.__print_data(
         &#34;Step Configuration&#34;,
-        self.step_config)
+        ConfigValue.convert_leaves_to_values(self.step_config)
+    )
     StepImplementer.__print_data(
         &#34;Step Environment Configuration&#34;,
-        self.step_environment_config)
+        ConfigValue.convert_leaves_to_values(self.step_environment_config)
+    )
     StepImplementer.__print_data(
         &#34;Step Configuration Runtime Overrides&#34;,
-        self.step_config_overrides)
+        ConfigValue.convert_leaves_to_values(self.step_config_overrides)
+    )
 
     # create the munged runtime step configuration and print
     copy_of_runtime_step_config = self.get_copy_of_runtime_step_config()
     StepImplementer.__print_data(
         &#34;Runtime Step Configuration&#34;,
-        copy_of_runtime_step_config)
+        ConfigValue.convert_leaves_to_values(copy_of_runtime_step_config)
+    )
 
-    # validate the runtime step configuration, run the step, and save the results
+    # validate the runtime step configuration
+    StepImplementer.__print_section_title(
+        f&#34;Standard Out - {self.step_name} - {self.sub_step_name}&#34;,
+        div_char=&#34;-&#34;,
+        indent=1
+    )
     self._validate_runtime_step_config(copy_of_runtime_step_config)
-    results = self._run_step()
-    self.write_results(results)
+
+    # run the step and save the results
+    indented_stdout = TextIOIndenter(
+        parent_stream=sys.stdout,
+        indent_level=2
+    )
+    indented_stderr = TextIOIndenter(
+        parent_stream=sys.stderr,
+        indent_level=2
+    )
+    with redirect_stdout(indented_stdout), redirect_stderr(indented_stderr):
+        results = self._run_step()
+        self.write_results(results)
 
     # print the step run results
-    StepImplementer.__print_section_title(f&#34;TSSC Step Results - {self.step_name}&#34;)
+    StepImplementer.__print_section_title(
+        f&#34;Results - {self.step_name} - {self.sub_step_name}&#34;,
+        div_char=&#34;-&#34;,
+        indent=1
+    )
     StepImplementer.__print_data(&#39;Results File Path&#39;, self.results_file_path)
-    StepImplementer.__print_data(&#39;Step Results&#39;, results)
-    StepImplementer.__print_section_title(f&#34;TSSC Step End - {self.step_name}&#34;)</code></pre>
+    StepImplementer.__print_data(&#39;Results&#39;, results)
+    StepImplementer.__print_section_title(f&#34;Step End - {self.step_name} - {self.sub_step_name}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="tssc.step_implementer.StepImplementer.write_results"><code class="name flex">
@@ -2066,11 +2468,18 @@ element.</dd>
             yaml.dump(updated_step_results, step_results_file)</code></pre>
 </details>
 </dd>
-<dt id="tssc.step_implementer.StepImplementer.write_temp_file"><code class="name flex">
-<span>def <span class="ident">write_temp_file</span></span>(<span>self, filename, contents)</span>
+<dt id="tssc.step_implementer.StepImplementer.write_working_file"><code class="name flex">
+<span>def <span class="ident">write_working_file</span></span>(<span>self, filename, contents=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write content to filename in working directory</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Relative path (to working dir), including file name, to create.</dd>
+<dt><strong><code>contents</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Contents to write to the file</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>str</code></dt>
@@ -2080,24 +2489,37 @@ element.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write_temp_file(self, filename, contents):
+<pre><code class="python">def write_working_file(self, filename, contents=None):
     &#34;&#34;&#34;
     Write content to filename in working directory
+
+    Parameters
+    ----------
+    filename : str
+        Relative path (to working dir), including file name, to create.
+    contents : str, optional
+        Contents to write to the file
 
     Returns
     -------
     str
         return a string to the absolute file path
     &#34;&#34;&#34;
-    if not os.path.exists(self.__work_dir_path):
-        os.makedirs(self.__work_dir_path)
-    step_path = os.path.join(self.__work_dir_path, self.step_name)
-    if not os.path.exists(step_path):
-        os.makedirs(step_path)
+    working_folder = self.create_working_folder()
 
-    file_path = os.path.join(step_path, filename)
-    with open(file_path, &#39;wb&#39;) as file:
-        file.write(contents)
+    file_path = os.path.join(working_folder, filename)
+
+    # if given contents write it to file
+    # else just touch empty file
+    #
+    # NOTE: in either case auto create any missing parent directories
+    if contents is not None:
+        with open(file_path, &#39;wb&#39;) as file:
+            file.write(contents)
+    else:
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        Path(file_path).touch()
+
     return file_path</code></pre>
 </details>
 </dd>
@@ -2131,10 +2553,11 @@ element.</dd>
 <li><code><a title="tssc.step_implementer.DefaultSteps.DEPLOY" href="#tssc.step_implementer.DefaultSteps.DEPLOY">DEPLOY</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.GENERATE_METADATA" href="#tssc.step_implementer.DefaultSteps.GENERATE_METADATA">GENERATE_METADATA</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.PACKAGE" href="#tssc.step_implementer.DefaultSteps.PACKAGE">PACKAGE</a></code></li>
-<li><code><a title="tssc.step_implementer.DefaultSteps.PUBLISH_WROKFLOW_RESULTS" href="#tssc.step_implementer.DefaultSteps.PUBLISH_WROKFLOW_RESULTS">PUBLISH_WROKFLOW_RESULTS</a></code></li>
+<li><code><a title="tssc.step_implementer.DefaultSteps.PUBLISH_WORKFLOW_RESULTS" href="#tssc.step_implementer.DefaultSteps.PUBLISH_WORKFLOW_RESULTS">PUBLISH_WORKFLOW_RESULTS</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.PUSH_ARTIFACTS" href="#tssc.step_implementer.DefaultSteps.PUSH_ARTIFACTS">PUSH_ARTIFACTS</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.PUSH_CONTAINER_IMAGE" href="#tssc.step_implementer.DefaultSteps.PUSH_CONTAINER_IMAGE">PUSH_CONTAINER_IMAGE</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.RUNTIME_VULNERABILITY_SCAN" href="#tssc.step_implementer.DefaultSteps.RUNTIME_VULNERABILITY_SCAN">RUNTIME_VULNERABILITY_SCAN</a></code></li>
+<li><code><a title="tssc.step_implementer.DefaultSteps.SIGN_CONTAINER_IMAGE" href="#tssc.step_implementer.DefaultSteps.SIGN_CONTAINER_IMAGE">SIGN_CONTAINER_IMAGE</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.STATIC_CODE_ANALYSIS" href="#tssc.step_implementer.DefaultSteps.STATIC_CODE_ANALYSIS">STATIC_CODE_ANALYSIS</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.TAG_SOURCE" href="#tssc.step_implementer.DefaultSteps.TAG_SOURCE">TAG_SOURCE</a></code></li>
 <li><code><a title="tssc.step_implementer.DefaultSteps.UAT" href="#tssc.step_implementer.DefaultSteps.UAT">UAT</a></code></li>
@@ -2145,6 +2568,8 @@ element.</dd>
 <h4><code><a title="tssc.step_implementer.StepImplementer" href="#tssc.step_implementer.StepImplementer">StepImplementer</a></code></h4>
 <ul class="">
 <li><code><a title="tssc.step_implementer.StepImplementer.config" href="#tssc.step_implementer.StepImplementer.config">config</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.create_working_dir_sub_dir" href="#tssc.step_implementer.StepImplementer.create_working_dir_sub_dir">create_working_dir_sub_dir</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.create_working_folder" href="#tssc.step_implementer.StepImplementer.create_working_folder">create_working_folder</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.current_results" href="#tssc.step_implementer.StepImplementer.current_results">current_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.current_step_results" href="#tssc.step_implementer.StepImplementer.current_step_results">current_step_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.environment" href="#tssc.step_implementer.StepImplementer.environment">environment</a></code></li>
@@ -2162,8 +2587,9 @@ element.</dd>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_environment_config" href="#tssc.step_implementer.StepImplementer.step_environment_config">step_environment_config</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_implementer_config_defaults" href="#tssc.step_implementer.StepImplementer.step_implementer_config_defaults">step_implementer_config_defaults</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_name" href="#tssc.step_implementer.StepImplementer.step_name">step_name</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.sub_step_name" href="#tssc.step_implementer.StepImplementer.sub_step_name">sub_step_name</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.write_results" href="#tssc.step_implementer.StepImplementer.write_results">write_results</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.write_temp_file" href="#tssc.step_implementer.StepImplementer.write_temp_file">write_temp_file</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.write_working_file" href="#tssc.step_implementer.StepImplementer.write_working_file">write_working_file</a></code></li>
 </ul>
 </li>
 </ul>

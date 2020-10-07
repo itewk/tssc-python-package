@@ -224,9 +224,12 @@ Results output by this step.
         }
     }
 &#34;&#34;&#34;
+import re
 import sys
+from io import StringIO
+
 import sh
-from tssc import StepImplementer, DefaultSteps
+from tssc import DefaultSteps, StepImplementer
 
 DEFAULT_CONFIG = {}
 
@@ -358,23 +361,36 @@ class Git(StepImplementer):
         return tag
 
     def _git_url(self):
-        return_val = None
+        git_url = None
         if self.get_config_value(&#39;url&#39;):
-            return_val = self.get_config_value(&#39;url&#39;)
+            git_url = self.get_config_value(&#39;url&#39;)
         else:
             try:
-                return_val = sh.git.config(
+                out = StringIO()
+                sh.git.config(
                     &#39;--get&#39;,
                     &#39;remote.origin.url&#39;,
-                    _out=sys.stdout,
-                    _tee=True,
                     _encoding=&#39;UTF-8&#39;,
-                    _decode_errors=&#39;ignore&#39;
-                    ).rstrip()
+                    _decode_errors=&#39;ignore&#39;,
+                    _out=out,
+                    _err=sys.stderr,
+                    _tee=&#39;err&#39;
+                )
+                git_url = out.getvalue().rstrip()
+
+                # remove ANYTHING@ from begining of git_url since step will pass in its own
+                # username and password
+                #
+                # Regex:
+                #   ^[^@]+@ - match from begining of line any charcter up until an @ and then the @
+                #   (.*) - match any character and capture to capture group 1
+                #   \1 - capture group 1 which is the http or https if there was one
+                #   \2 - capture group 2 which is anything after the first @ if there was one
+                git_url = re.sub(r&#34;^(http://|https://)[^@]+@(.*)&#34;, r&#34;\1\2&#34;, git_url)
 
             except sh.ErrorReturnCode as error:  # pylint: disable=undefined-variable # pragma: no cover
                 raise RuntimeError(&#39;Error invoking git config --get remote.origin.url&#39;) from error
-        return return_val
+        return git_url
 
     @staticmethod
     def _git_tag(git_tag_value):  # pragma: no cover
@@ -388,10 +404,12 @@ class Git(StepImplementer):
             sh.git.tag(  # pylint: disable=no-member
                 git_tag_value,
                 &#39;-f&#39;,
-                _out=sys.stdout
+                _out=sys.stdout,
+                _err=sys.stderr,
+                _tee=&#39;err&#39;
             )
         except sh.ErrorReturnCode as error:  # pylint: disable=undefined-variable
-            raise RuntimeError(&#39;Error invoking git tag &#39; + git_tag_value) from error
+            raise RuntimeError(f&#34;Error pushing git tag ({git_tag_value}): {error}&#34;) from error
 
     @staticmethod
     def _git_push(url=None):  # pragma: no cover
@@ -400,12 +418,16 @@ class Git(StepImplementer):
                 sh.git.push(
                     url,
                     &#39;--tag&#39;,
-                    _out=sys.stdout
+                    _out=sys.stdout,
+                    _err=sys.stderr,
+                    _tee=&#39;err&#39;
                 )
             else:
                 sh.git.push(
                     &#39;--tag&#39;,
-                    _out=sys.stdout
+                    _out=sys.stdout,
+                    _err=sys.stderr,
+                    _tee=&#39;err&#39;
                 )
         except sh.ErrorReturnCode as error:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git push&#39;) from error</code></pre>
@@ -555,23 +577,36 @@ for http and https git repos, and that is a desired use case.</p></div>
         return tag
 
     def _git_url(self):
-        return_val = None
+        git_url = None
         if self.get_config_value(&#39;url&#39;):
-            return_val = self.get_config_value(&#39;url&#39;)
+            git_url = self.get_config_value(&#39;url&#39;)
         else:
             try:
-                return_val = sh.git.config(
+                out = StringIO()
+                sh.git.config(
                     &#39;--get&#39;,
                     &#39;remote.origin.url&#39;,
-                    _out=sys.stdout,
-                    _tee=True,
                     _encoding=&#39;UTF-8&#39;,
-                    _decode_errors=&#39;ignore&#39;
-                    ).rstrip()
+                    _decode_errors=&#39;ignore&#39;,
+                    _out=out,
+                    _err=sys.stderr,
+                    _tee=&#39;err&#39;
+                )
+                git_url = out.getvalue().rstrip()
+
+                # remove ANYTHING@ from begining of git_url since step will pass in its own
+                # username and password
+                #
+                # Regex:
+                #   ^[^@]+@ - match from begining of line any charcter up until an @ and then the @
+                #   (.*) - match any character and capture to capture group 1
+                #   \1 - capture group 1 which is the http or https if there was one
+                #   \2 - capture group 2 which is anything after the first @ if there was one
+                git_url = re.sub(r&#34;^(http://|https://)[^@]+@(.*)&#34;, r&#34;\1\2&#34;, git_url)
 
             except sh.ErrorReturnCode as error:  # pylint: disable=undefined-variable # pragma: no cover
                 raise RuntimeError(&#39;Error invoking git config --get remote.origin.url&#39;) from error
-        return return_val
+        return git_url
 
     @staticmethod
     def _git_tag(git_tag_value):  # pragma: no cover
@@ -585,10 +620,12 @@ for http and https git repos, and that is a desired use case.</p></div>
             sh.git.tag(  # pylint: disable=no-member
                 git_tag_value,
                 &#39;-f&#39;,
-                _out=sys.stdout
+                _out=sys.stdout,
+                _err=sys.stderr,
+                _tee=&#39;err&#39;
             )
         except sh.ErrorReturnCode as error:  # pylint: disable=undefined-variable
-            raise RuntimeError(&#39;Error invoking git tag &#39; + git_tag_value) from error
+            raise RuntimeError(f&#34;Error pushing git tag ({git_tag_value}): {error}&#34;) from error
 
     @staticmethod
     def _git_push(url=None):  # pragma: no cover
@@ -597,12 +634,16 @@ for http and https git repos, and that is a desired use case.</p></div>
                 sh.git.push(
                     url,
                     &#39;--tag&#39;,
-                    _out=sys.stdout
+                    _out=sys.stdout,
+                    _err=sys.stderr,
+                    _tee=&#39;err&#39;
                 )
             else:
                 sh.git.push(
                     &#39;--tag&#39;,
-                    _out=sys.stdout
+                    _out=sys.stdout,
+                    _err=sys.stderr,
+                    _tee=&#39;err&#39;
                 )
         except sh.ErrorReturnCode as error:  # pylint: disable=undefined-variable
             raise RuntimeError(&#39;Error invoking git push&#39;) from error</code></pre>
@@ -617,6 +658,8 @@ for http and https git repos, and that is a desired use case.</p></div>
 <li><code><b><a title="tssc.step_implementer.StepImplementer" href="../../step_implementer.html#tssc.step_implementer.StepImplementer">StepImplementer</a></b></code>:
 <ul class="hlist">
 <li><code><a title="tssc.step_implementer.StepImplementer.config" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.config">config</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.create_working_dir_sub_dir" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.create_working_dir_sub_dir">create_working_dir_sub_dir</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.create_working_folder" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.create_working_folder">create_working_folder</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.current_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.current_results">current_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.current_step_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.current_step_results">current_step_results</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.environment" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.environment">environment</a></code></li>
@@ -634,8 +677,9 @@ for http and https git repos, and that is a desired use case.</p></div>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_environment_config" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_environment_config">step_environment_config</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_implementer_config_defaults" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_implementer_config_defaults">step_implementer_config_defaults</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.step_name" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.step_name">step_name</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.sub_step_name" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.sub_step_name">sub_step_name</a></code></li>
 <li><code><a title="tssc.step_implementer.StepImplementer.write_results" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_results">write_results</a></code></li>
-<li><code><a title="tssc.step_implementer.StepImplementer.write_temp_file" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_temp_file">write_temp_file</a></code></li>
+<li><code><a title="tssc.step_implementer.StepImplementer.write_working_file" href="../../step_implementer.html#tssc.step_implementer.StepImplementer.write_working_file">write_working_file</a></code></li>
 </ul>
 </li>
 </ul>

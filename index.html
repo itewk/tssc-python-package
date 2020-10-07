@@ -59,6 +59,7 @@
 <li>container-image-static-vulnerability-scan</li>
 <li>create-deployment-environment</li>
 <li>deploy</li>
+<li>validate-environment-configuration</li>
 <li>uat</li>
 <li>runtime-vulnerability-scan</li>
 <li>canary-test</li>
@@ -77,6 +78,15 @@
 <p><strong> Example 1 </strong></p>
 <pre><code>---
 tssc-config:
+  # List of decryptors to use to decrypt any encrypted configuration.
+  config-decryptors:
+  - implementer: SOPS
+    #config:
+    #  additional_sops_args: [
+    #    '--any-valid-sops-cmd-arg-here=value',
+    #    '--aws-profile=FOO'
+    #  ]
+
   # Dictionary of configuration options which will be used in step configuration if that
   # step does not have a specific value for that configuration already or one is not
   # given by global-environment-defaults.
@@ -134,6 +144,16 @@ tssc-config:
 <pre><code>---
 tssc-config:
   # Optional
+  # List of decryptors to use to decrypt any encrypted configuration.
+  config-decryptors:
+  - implementer: SOPS
+    #config:
+    #  additional_sops_args: [
+    #    '--any-valid-sops-cmd-arg-here=value',
+    #    '--aws-profile=FOO'
+    #  ]
+
+  # Optional
   # Dictionary of configuration options which will be used in step configuration if that
   # step does not have a specific value for that configuration already or one is not
   # given by global-environment-defaults.
@@ -146,6 +166,56 @@ tssc-config:
     # Name of the service this artifact built and deployed by this TSSC workflow implements as
     # part of the application it is a part of.
     service-name: ''
+
+    # Optional.
+    # Maven server settings for settings.xml file
+    #maven-servers:
+    #  internal-mirror-1:
+    #    id: ''
+    #    username: ''
+    #    password: ''
+    #  internal-mirror-2:
+    #    id: ''
+    #    username: ''
+    #    password: ''
+
+    # Optional.
+    # Maven repository settings for settings.xml file
+    #maven-repositories:
+    #  internal-mirror-1:
+    #    id: ''
+    #    url: ''
+    #    snapshots: ''
+    #    releases: ''
+    #  internal-mirror-2:
+    #    id: ''
+    #    url: ''
+    #    snapshots: ''
+    #    releases: ''
+
+    # Optional.
+    # Maven mirror settings for settings.xml file
+    #maven-mirrors:
+    #  internal-mirror-1:
+    #    id: ''
+    #    url: ''
+    #    mirror-of: ''
+    #  internal-mirror-2:
+    #    id: ''
+    #    url: ''
+    #    mirror-of: ''
+
+    # Dictionary of container registries to authenticate with.
+    # Suggest putting in global configuration so it can be used for creating and pushing
+    # images. But can also or instead be put in the individual steps if say different
+    # registires are used for building images then pushing them.
+    #container-registries:
+    #  registry.redhat.io:
+    #    username: account_number|acount_name
+    #    password: encrypt_me
+    #  registry.internal.example.xyz:
+    #    username: team_name+project_name
+    #    password: encrypt_me
 
   # Optional
   # Dictionary of dictionaries where the first level keys are environment names and their
@@ -303,13 +373,12 @@ tssc-config:
     config: {
       # Required.
       # URL to the artifact repository to push the artifact to.
-      url: ''
+      maven-push-artifact-repo-url: ''
 
-      # Optional.
-      #user: None
+      # Required.
+      # Id to the artifact repository to push the artifact to.
+      maven-push-artifact-repo-id: ''
 
-      # Optional.
-      #password: None
     }
 
   create-container-image:
@@ -340,9 +409,13 @@ tssc-config:
   container-image-unit-test: []
 
   container-image-static-compliance-scan:
-  # WARNING: not yet implemented
   - implementer: OpenSCAP
-    config: {}
+    config:
+      # Required
+      scap-input-file: ''
+
+      # Optional
+      #log-level: 'Info'
 
   container-image-static-vulnerability-scan:
   # WARNING: not yet implemented
@@ -380,10 +453,18 @@ tssc-config:
       # specification
       readiness-probe-path: ''
 
+  validate-environment-configuration:
+  - implementer: ConfiglintFromArgocd
+    config: {}
+  - implementer: Configlint
+    config: {
+      # Optional.
+      # Path to the rules file
+      #rules: ''
+    }
 
   uat:
-  # WARNING: not yet implemented
-  - implementer: Cucumber
+  - implementer: Maven
     config: {}
 
   # WARNING: not yet implemented
@@ -401,6 +482,16 @@ tssc-config:
 <pre><code>---
 tssc-config:
   # Optional
+  # List of decryptors to use to decrypt any encrypted configuration.
+  config-decryptors:
+  - implementer: SOPS
+    #config:
+    #  additional_sops_args: [
+    #    '--any-valid-sops-cmd-arg-here=value',
+    #    '--aws-profile=FOO'
+    #  ]
+
+  # Optional
   # Dictionary of configuration options which will be used in step configuration if that
   # step does not have a specific value for that configuration already or one is not
   # given by global-environment-defaults.
@@ -413,6 +504,19 @@ tssc-config:
     # Name of the service this artifact built and deployed by this TSSC workflow implements as
     # part of the application it is a part of.
     service-name: ''
+
+    # Optional.
+    # Dictionary of container registries to authenticate with.
+    # Suggest putting in global configuration so it can be used for creating and pushing
+    # images. But can also or instead be put in the individual steps if say different
+    # registires are used for building images then pushing them.
+    #container-registries:
+    #  registry.redhat.io:
+    #    username: account_number|acount_name
+    #    password: encrypt_me
+    #  registry.internal.example.xyz:
+    #    username: team_name+project_name
+    #    password: encrypt_me
 
   # Optional
   # Dictionary of dictionaries where the first level keys are environment names and their
@@ -553,17 +657,7 @@ tssc-config:
   push-artifacts:
   # WARNING: not yet implemented
   - implementer: NPM
-    config: {
-      # Required.
-      # URL to the artifact repository to push the artifact to.
-      url: ''
-
-      # Optional.
-      #user: None
-
-      # Optional.
-      #password: None
-    }
+    config: {}
 
   create-container-image:
   - implementer: Buildah
@@ -593,9 +687,13 @@ tssc-config:
   container-image-unit-test: []
 
   container-image-static-compliance-scan:
-  # WARNING: not yet implemented
   - implementer: OpenSCAP
-    config: {}
+    config:
+      # Required
+      scap-input-file: ''
+
+      # Optional
+      #log-level: 'Info'
 
   container-image-static-vulnerability-scan:
   # WARNING: not yet implemented
@@ -637,8 +735,7 @@ tssc-config:
       readiness-probe-path: ''
 
   uat:
-  # WARNING: not yet implemented
-  - implementer: Cucumber
+  - implementer: Maven
     config: {}
 
   # WARNING: not yet implemented
@@ -654,10 +751,10 @@ tssc-config:
 </code></pre>
 <h2 id="examples">Examples</h2>
 <p>Getting Help</p>
-<pre><code class="python-repl">&gt;&gt;&gt; python -m tssc --help
+<pre><code class="language-python-repl">&gt;&gt;&gt; python -m tssc --help
 </code></pre>
 <p>Example Running the 'generate-metadata' step</p>
-<pre><code class="python-repl">&gt;&gt;&gt; python -m tssc
+<pre><code class="language-python-repl">&gt;&gt;&gt; python -m tssc
 ...     --config=my-app-tssc-config.yml
 ...     --results-file=my-app-tssc-results.yml
 ...     --step=generate-metadata
@@ -708,6 +805,7 @@ Step Configuration
 * container-image-static-vulnerability-scan
 * create-deployment-environment
 * deploy
+* validate-environment-configuration
 * uat
 * runtime-vulnerability-scan
 * canary-test
@@ -729,6 +827,15 @@ From least precedence to highest precedence.
 
     ---
     tssc-config:
+      # List of decryptors to use to decrypt any encrypted configuration.
+      config-decryptors:
+      - implementer: SOPS
+        #config:
+        #  additional_sops_args: [
+        #    &#39;--any-valid-sops-cmd-arg-here=value&#39;,
+        #    &#39;--aws-profile=FOO&#39;
+        #  ]
+
       # Dictionary of configuration options which will be used in step configuration if that
       # step does not have a specific value for that configuration already or one is not
       # given by global-environment-defaults.
@@ -787,6 +894,16 @@ From least precedence to highest precedence.
     ---
     tssc-config:
       # Optional
+      # List of decryptors to use to decrypt any encrypted configuration.
+      config-decryptors:
+      - implementer: SOPS
+        #config:
+        #  additional_sops_args: [
+        #    &#39;--any-valid-sops-cmd-arg-here=value&#39;,
+        #    &#39;--aws-profile=FOO&#39;
+        #  ]
+
+      # Optional
       # Dictionary of configuration options which will be used in step configuration if that
       # step does not have a specific value for that configuration already or one is not
       # given by global-environment-defaults.
@@ -799,6 +916,56 @@ From least precedence to highest precedence.
         # Name of the service this artifact built and deployed by this TSSC workflow implements as
         # part of the application it is a part of.
         service-name: &#39;&#39;
+
+        # Optional.
+        # Maven server settings for settings.xml file
+        #maven-servers:
+        #  internal-mirror-1:
+        #    id: &#39;&#39;
+        #    username: &#39;&#39;
+        #    password: &#39;&#39;
+        #  internal-mirror-2:
+        #    id: &#39;&#39;
+        #    username: &#39;&#39;
+        #    password: &#39;&#39;
+
+        # Optional.
+        # Maven repository settings for settings.xml file
+        #maven-repositories:
+        #  internal-mirror-1:
+        #    id: &#39;&#39;
+        #    url: &#39;&#39;
+        #    snapshots: &#39;&#39;
+        #    releases: &#39;&#39;
+        #  internal-mirror-2:
+        #    id: &#39;&#39;
+        #    url: &#39;&#39;
+        #    snapshots: &#39;&#39;
+        #    releases: &#39;&#39;
+
+        # Optional.
+        # Maven mirror settings for settings.xml file
+        #maven-mirrors:
+        #  internal-mirror-1:
+        #    id: &#39;&#39;
+        #    url: &#39;&#39;
+        #    mirror-of: &#39;&#39;
+        #  internal-mirror-2:
+        #    id: &#39;&#39;
+        #    url: &#39;&#39;
+        #    mirror-of: &#39;&#39;
+
+        # Dictionary of container registries to authenticate with.
+        # Suggest putting in global configuration so it can be used for creating and pushing
+        # images. But can also or instead be put in the individual steps if say different
+        # registires are used for building images then pushing them.
+        #container-registries:
+        #  registry.redhat.io:
+        #    username: account_number|acount_name
+        #    password: encrypt_me
+        #  registry.internal.example.xyz:
+        #    username: team_name+project_name
+        #    password: encrypt_me
 
       # Optional
       # Dictionary of dictionaries where the first level keys are environment names and their
@@ -956,13 +1123,12 @@ From least precedence to highest precedence.
         config: {
           # Required.
           # URL to the artifact repository to push the artifact to.
-          url: &#39;&#39;
+          maven-push-artifact-repo-url: &#39;&#39;
 
-          # Optional.
-          #user: None
+          # Required.
+          # Id to the artifact repository to push the artifact to.
+          maven-push-artifact-repo-id: &#39;&#39;
 
-          # Optional.
-          #password: None
         }
 
       create-container-image:
@@ -993,9 +1159,13 @@ From least precedence to highest precedence.
       container-image-unit-test: []
 
       container-image-static-compliance-scan:
-      # WARNING: not yet implemented
       - implementer: OpenSCAP
-        config: {}
+        config:
+          # Required
+          scap-input-file: &#39;&#39;
+
+          # Optional
+          #log-level: &#39;Info&#39;
 
       container-image-static-vulnerability-scan:
       # WARNING: not yet implemented
@@ -1033,10 +1203,18 @@ From least precedence to highest precedence.
           # specification
           readiness-probe-path: &#39;&#39;
 
+      validate-environment-configuration:
+      - implementer: ConfiglintFromArgocd
+        config: {}
+      - implementer: Configlint
+        config: {
+          # Optional.
+          # Path to the rules file
+          #rules: &#39;&#39;
+        }
 
       uat:
-      # WARNING: not yet implemented
-      - implementer: Cucumber
+      - implementer: Maven
         config: {}
 
       # WARNING: not yet implemented
@@ -1055,6 +1233,16 @@ From least precedence to highest precedence.
     ---
     tssc-config:
       # Optional
+      # List of decryptors to use to decrypt any encrypted configuration.
+      config-decryptors:
+      - implementer: SOPS
+        #config:
+        #  additional_sops_args: [
+        #    &#39;--any-valid-sops-cmd-arg-here=value&#39;,
+        #    &#39;--aws-profile=FOO&#39;
+        #  ]
+
+      # Optional
       # Dictionary of configuration options which will be used in step configuration if that
       # step does not have a specific value for that configuration already or one is not
       # given by global-environment-defaults.
@@ -1067,6 +1255,19 @@ From least precedence to highest precedence.
         # Name of the service this artifact built and deployed by this TSSC workflow implements as
         # part of the application it is a part of.
         service-name: &#39;&#39;
+
+        # Optional.
+        # Dictionary of container registries to authenticate with.
+        # Suggest putting in global configuration so it can be used for creating and pushing
+        # images. But can also or instead be put in the individual steps if say different
+        # registires are used for building images then pushing them.
+        #container-registries:
+        #  registry.redhat.io:
+        #    username: account_number|acount_name
+        #    password: encrypt_me
+        #  registry.internal.example.xyz:
+        #    username: team_name+project_name
+        #    password: encrypt_me
 
       # Optional
       # Dictionary of dictionaries where the first level keys are environment names and their
@@ -1207,17 +1408,7 @@ From least precedence to highest precedence.
       push-artifacts:
       # WARNING: not yet implemented
       - implementer: NPM
-        config: {
-          # Required.
-          # URL to the artifact repository to push the artifact to.
-          url: &#39;&#39;
-
-          # Optional.
-          #user: None
-
-          # Optional.
-          #password: None
-        }
+        config: {}
 
       create-container-image:
       - implementer: Buildah
@@ -1247,9 +1438,13 @@ From least precedence to highest precedence.
       container-image-unit-test: []
 
       container-image-static-compliance-scan:
-      # WARNING: not yet implemented
       - implementer: OpenSCAP
-        config: {}
+        config:
+          # Required
+          scap-input-file: &#39;&#39;
+
+          # Optional
+          #log-level: &#39;Info&#39;
 
       container-image-static-vulnerability-scan:
       # WARNING: not yet implemented
@@ -1291,8 +1486,7 @@ From least precedence to highest precedence.
           readiness-probe-path: &#39;&#39;
 
       uat:
-      # WARNING: not yet implemented
-      - implementer: Cucumber
+      - implementer: Maven
         config: {}
 
       # WARNING: not yet implemented
@@ -1324,11 +1518,9 @@ Example Running the &#39;generate-metadata&#39; step
 &#34;&#34;&#34;
 
 import __main__
-from .config import TSSCConfig, TSSCStepConfig, TSSCSubStepConfig
+from .step_implementer import StepImplementer, DefaultSteps
 from .factory import TSSCFactory
 from .exceptions import TSSCException
-from .step_implementer import DefaultSteps, StepImplementer
-from .utils import *
 
 __all__ = [
     &#39;config&#39;,
@@ -1342,9 +1534,13 @@ __all__ = [
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="tssc.config" href="config.html">tssc.config</a></code></dt>
+<dt><code class="name"><a title="tssc.config" href="config/index.html">tssc.config</a></code></dt>
 <dd>
 <div class="desc"><p>Configuration for TSSC workflow.</p></div>
+</dd>
+<dt><code class="name"><a title="tssc.decryption_utils" href="decryption_utils.html">tssc.decryption_utils</a></code></dt>
+<dd>
+<div class="desc"><p>Shared utilities for doing decryption.</p></div>
 </dd>
 <dt><code class="name"><a title="tssc.exceptions" href="exceptions.html">tssc.exceptions</a></code></dt>
 <dd>
@@ -1396,7 +1592,8 @@ __all__ = [
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="tssc.config" href="config.html">tssc.config</a></code></li>
+<li><code><a title="tssc.config" href="config/index.html">tssc.config</a></code></li>
+<li><code><a title="tssc.decryption_utils" href="decryption_utils.html">tssc.decryption_utils</a></code></li>
 <li><code><a title="tssc.exceptions" href="exceptions.html">tssc.exceptions</a></code></li>
 <li><code><a title="tssc.factory" href="factory.html">tssc.factory</a></code></li>
 <li><code><a title="tssc.step_implementer" href="step_implementer.html">tssc.step_implementer</a></code></li>
